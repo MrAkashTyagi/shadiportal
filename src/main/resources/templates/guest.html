@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>I am in guest page</h1>
+<h1>Gusests are : <span th:text="${ names }"></span>
+</h1>
+
+<h1>Dynamic guests are : <span th:text="${guests}" ></span></h1>
+
+<ul>
+
+    <li th:each="g : ${guests}">
+<span th:text="${g}"></span>
+    </li>
+
+</ul>
+
+</body>
+</html>
