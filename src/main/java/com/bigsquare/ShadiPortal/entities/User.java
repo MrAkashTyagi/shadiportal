@@ -1,6 +1,10 @@
 package com.bigsquare.ShadiPortal.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,8 +17,11 @@ public class User {
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+    @NotBlank(message = "Name field is required !!")
+    @Size(min = 2, max = 20, message = "mimn 2 and max 20 chachters are allowed !!")
     private String name;
     private String role;
+    @NotBlank(message = "Please follow the format : test@testmail.com")
     private String email;
     private String password;
     private String about;

@@ -4,11 +4,13 @@ import com.bigsquare.ShadiPortal.entities.User;
 import com.bigsquare.ShadiPortal.helper.Message;
 import com.bigsquare.ShadiPortal.repositories.UserRepo;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.Banner;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 @Controller
@@ -42,12 +44,22 @@ public class HomeController {
 
 //    handler for regestring user
     @RequestMapping(value = "/do_register",method = RequestMethod.POST)
-    public String registerUser(@ModelAttribute("user") User user, @RequestParam(value = "agreement",defaultValue = "false")boolean agreement, Model model, HttpSession session){
+    public String registerUser(@Valid @ModelAttribute("user") User user,
+                               BindingResult bindingResult,
+                               @RequestParam(value = "agreement",defaultValue = "false")boolean agreement,
+                               Model model,
+                               HttpSession session){
 
         try{
             if (!agreement){
                 System.out.println("You have nor checked the agreement !!");
                 throw new Exception("You have nor checked the agreement !!");
+            }
+
+            if (bindingResult.hasErrors()){
+                System.out.println("Error :"+bindingResult.toString());
+                model.addAttribute("user",user);
+                return "signup";
             }
 
             user.setRole("ROLE_USER");
@@ -62,7 +74,7 @@ public class HomeController {
 
             model.addAttribute("user",new User());
 
-            session.setAttribute("message",new Message("Successfully registered", "aler-success"));
+            session.setAttribute("message",new Message("Successfully registered", "alert-success"));
 
         }
         catch (Exception e){
