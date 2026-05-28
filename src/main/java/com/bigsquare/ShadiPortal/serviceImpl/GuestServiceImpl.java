@@ -21,20 +21,20 @@ public class GuestServiceImpl implements GuestService {
     @Autowired
     GuestRepo guestRepo;
 
-    public Guest saveGuest( Guest guest){
+    public Guest saveGuest(Guest guest) {
 
-        if (guest.getFamily() != null && guest.getFamily().getId() != null){
+        if (guest.getFamily() != null && guest.getFamily().getId() != null) {
 
             String inputFamilyName = guest.getFamily().getFamilyName();
 
             Optional<Family> existingFamily = familyRepo.findByFamilyName(inputFamilyName);
-            if (existingFamily.isPresent()){
+            if (existingFamily.isPresent()) {
                 guest.setFamily(existingFamily.get());
-            }else {
+            } else {
                 guest.getFamily().setId(null);
             }
 
-           // Family existingFamily = familyRepo.findById(guest.getFamily().getId()).orElseThrow(() -> new EntityNotFoundException("Family not found"));
+            // Family existingFamily = familyRepo.findById(guest.getFamily().getId()).orElseThrow(() -> new EntityNotFoundException("Family not found"));
             //guest.setFamily(existingFamily);
 
         }
@@ -42,7 +42,7 @@ public class GuestServiceImpl implements GuestService {
         return this.guestRepo.save(guest);
     }
 
-    public List<Guest> getAllGuests(){
+    public List<Guest> getAllGuests() {
         List<Guest> guests = guestRepo.findAll();
         return guests;
     }
@@ -63,7 +63,41 @@ public class GuestServiceImpl implements GuestService {
 
     @Override
     public Guest updateGuest(Integer id, Guest guest) {
-        return null;
+
+//        get user
+
+        Guest existingGuest = this.guestRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Entity not found !!"));
+
+        existingGuest.setName(guest.getName());
+        existingGuest.setEmail(guest.getEmail());
+        existingGuest.setGuestCategory(guest.getGuestCategory());
+        existingGuest.setWhatsapp_Number(guest.getWhatsapp_Number());
+        existingGuest.setGender(guest.getGender());
+        existingGuest.setFamily(guest.getFamily());
+        existingGuest.setPhoneNumber(guest.getPhoneNumber());
+        existingGuest.setAdultOrchild(guest.getAdultOrchild());
+
+        if (guest.getFamily() != null) {
+            Family existingFamily = this.familyRepo.findById(guest.getFamily().getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Family not found !!"));
+
+            existingGuest.setFamily(existingFamily);
+
+        } else if (guest.getFamily().getFamilyName() != null) {
+            String inputFamilyName = guest.getFamily().getFamilyName();
+            Optional<Family> dbFamily = this.familyRepo.findByFamilyName(inputFamilyName);
+            if (dbFamily.isPresent()) {
+                existingGuest.setFamily(dbFamily.get());
+            } else {
+                Family newFamily = new Family();
+                newFamily.setFamilyName(inputFamilyName);
+                existingGuest.setFamily(newFamily);
+
+            }
+        }
+
+
+        return this.guestRepo.save(existingGuest);
     }
 
     @Override

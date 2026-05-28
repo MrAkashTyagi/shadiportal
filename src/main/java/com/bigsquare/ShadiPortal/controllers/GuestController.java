@@ -39,6 +39,11 @@ public class GuestController {
 
 //    update guest
 
+    @PutMapping("/{id}")
+    public Guest updateGuest(@PathVariable Integer id, @RequestBody Guest guest){
+        return this.guestService.updateGuest(id, guest);
+    }
+
 //    delete guest
 
     @DeleteMapping("/{id}")
