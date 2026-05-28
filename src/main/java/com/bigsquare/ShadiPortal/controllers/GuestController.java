@@ -1,26 +1,52 @@
 package com.bigsquare.ShadiPortal.controllers;
 
 import com.bigsquare.ShadiPortal.entities.Guest;
-import com.bigsquare.ShadiPortal.services.GuestService;
-import com.bigsquare.ShadiPortal.services.GuestServiceImpl;
+import com.bigsquare.ShadiPortal.serviceImpl.GuestServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.devtools.autoconfigure.ConditionalOnEnabledDevTools;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@RestController
 @Controller
+@RequestMapping("/guests")
 public class GuestController {
 
     @Autowired
     private GuestServiceImpl guestService;
 
+    @RequestMapping("/getAllGuests")
+    public List<Guest> getAllGuests(){
+        return this.guestService.getAllGuests();
+    }
 
-    @RequestMapping(value = "/guests", method = RequestMethod.GET)
+//    create Guests
+
+    @PostMapping
+    public Guest createGuest(@RequestBody Guest guest){
+        Guest guest1 = this.guestService.saveGuest(guest);
+        return guest1;
+    }
+
+//    get guest by id
+
+    @GetMapping("/{id}")
+    public Guest getById(@PathVariable Integer id){
+        return this.guestService.getById(id);
+    }
+
+//    update guest
+
+//    delete guest
+
+    @DeleteMapping("/{id}")
+    public void deleteGuest(@PathVariable Integer id){
+        this.guestService.delete(id);
+    }
+
+    @RequestMapping(value = "/guestList", method = RequestMethod.GET)
     public String guestController(){
         return "guest";
     }

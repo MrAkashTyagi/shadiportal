@@ -1,5 +1,6 @@
 package com.bigsquare.ShadiPortal.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import org.hibernate.annotations.AnyDiscriminatorImplicitValues;
 import org.springframework.boot.autoconfigure.web.WebProperties;
@@ -14,26 +15,28 @@ public class Family {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "family_id")
-    private int id;
+    private Integer id;
     private String familyName;
 
-//    @OneToMany(mappedBy = "family")
-//    private List<Guest> guestList;
+//    @OneToMany(mappedBy = "family", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "family")
+    @JsonIgnoreProperties("family")
+    private List<Guest> guestList;
 
-    public Family(int id, String familyName, List<Guest> guestList) {
+    public Family(Integer id, String familyName, List<Guest> guestList) {
         this.id = id;
         this.familyName = familyName;
-//        this.guestList = guestList;
+        this.guestList = guestList;
     }
 
     public Family() {
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -46,13 +49,13 @@ public class Family {
     }
 
 
-//    public List<Guest> getGuestList() {
-//        return guestList;
-//    }
+    public List<Guest> getGuestList() {
+        return guestList;
+    }
 
-//    public void setGuestList(List<Guest> guestList) {
-//        this.guestList = guestList;
-//    }
+    public void setGuestList(List<Guest> guestList) {
+        this.guestList = guestList;
+    }
 
     @Override
     public String toString() {

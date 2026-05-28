@@ -1,5 +1,6 @@
 package com.bigsquare.ShadiPortal.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
@@ -9,16 +10,16 @@ public class Guest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column (name = "guest_id")
-    private int id;
+    private Integer id;
     private String name;
 
-//    public Family getFamily() {
-//        return family;
-//    }
+    public Family getFamily() {
+        return family;
+    }
 
-//    public void setFamily(Family family) {
-//        this.family = family;
-//    }
+    public void setFamily(Family family) {
+        this.family = family;
+    }
 
     private String phoneNumber;
     private String whatsapp_Number;
@@ -27,7 +28,13 @@ public class Guest {
     private String gender;
     private String adultOrchild;
 
-    public Guest(int id, String name, String phoneNumber, String whatsapp_Number, String email, String guestCategory, String gender, String adultOrchild, Family family) {
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinColumn(name = "family_id")
+    @JsonIgnoreProperties("guestList")
+
+    private Family family;
+
+    public Guest(Integer id, String name, String phoneNumber, String whatsapp_Number, String email, String guestCategory, String gender, String adultOrchild, Family family) {
         this.id = id;
         this.name = name;
         this.phoneNumber = phoneNumber;
@@ -36,7 +43,7 @@ public class Guest {
         this.guestCategory = guestCategory;
         this.gender = gender;
         this.adultOrchild = adultOrchild;
-//        this.family = family;
+        this.family = family;
     }
 
     @ManyToOne
@@ -73,11 +80,11 @@ public class Guest {
     public Guest() {
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
