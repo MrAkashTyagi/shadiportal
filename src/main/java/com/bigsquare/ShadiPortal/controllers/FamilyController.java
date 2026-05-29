@@ -9,6 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/family")
+@CrossOrigin("*")
 public class FamilyController {
 
     @Autowired
