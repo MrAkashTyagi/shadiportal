@@ -23,15 +23,15 @@ public class GuestServiceImpl implements GuestService {
 
     public Guest saveGuest(Guest guest) {
 
-        if (guest.getFamily() != null && guest.getFamily().getId() != null) {
+        if (guest.getFamily() != null && guest.getFamily().getFamilyName() != null) {
 
-            String inputFamilyName = guest.getFamily().getFamilyName();
+            String inputFamilyName = guest.getFamily().getFamilyName().trim();
 
-            Optional<Family> existingFamily = familyRepo.findByFamilyName(inputFamilyName);
+            Optional<Family> existingFamily = familyRepo.findByFamilyNameIgnoreCase(inputFamilyName);
             if (existingFamily.isPresent()) {
                 guest.setFamily(existingFamily.get());
             } else {
-                guest.getFamily().setId(null);
+                guest.getFamily().setFamilyName(inputFamilyName);
             }
 
             // Family existingFamily = familyRepo.findById(guest.getFamily().getId()).orElseThrow(() -> new EntityNotFoundException("Family not found"));
@@ -77,25 +77,34 @@ public class GuestServiceImpl implements GuestService {
         existingGuest.setPhoneNumber(guest.getPhoneNumber());
         existingGuest.setAdultOrchild(guest.getAdultOrchild());
 
+        // 2. SAFE FAMILY LOGIC (No Null ID Crash)
         if (guest.getFamily() != null) {
-            Family existingFamily = this.familyRepo.findById(guest.getFamily().getId())
-                    .orElseThrow(() -> new EntityNotFoundException("Family not found !!"));
 
-            existingGuest.setFamily(existingFamily);
-
-        } else if (guest.getFamily().getFamilyName() != null) {
-            String inputFamilyName = guest.getFamily().getFamilyName();
-            Optional<Family> dbFamily = this.familyRepo.findByFamilyName(inputFamilyName);
-            if (dbFamily.isPresent()) {
-                existingGuest.setFamily(dbFamily.get());
-            } else {
-                Family newFamily = new Family();
-                newFamily.setFamilyName(inputFamilyName);
-                existingGuest.setFamily(newFamily);
-
+            // AGAR USER NE DROPDOWN YA KAHI SE EXISTNG FAMILY KI ID BHEJI HAI
+            if (guest.getFamily().getId() != null) {
+                Family existingFamily = this.familyRepo.findById(guest.getFamily().getId())
+                        .orElseThrow(() -> new EntityNotFoundException("Family not found !!"));
+                existingGuest.setFamily(existingFamily);
             }
-        }
 
+            // AGAR ID NAHI HAI PAR FAMILY NAME BHEJA HAI (Aapke Angular Form Jaisa Case)
+            else if (guest.getFamily().getFamilyName() != null && !guest.getFamily().getFamilyName().trim().isEmpty()) {
+                String inputFamilyName = guest.getFamily().getFamilyName().trim();
+
+                // Database me same name ka parivar dhoondenge (Unique and Duplicate check)
+                Optional<Family> dbFamily = this.familyRepo.findByFamilyName(inputFamilyName);
+
+                if (dbFamily.isPresent()) {
+                    existingGuest.setFamily(dbFamily.get()); // Purane se link kar do
+                } else {
+                    Family newFamily = new Family();
+                    newFamily.setFamilyName(inputFamilyName);
+                    existingGuest.setFamily(newFamily); // Naya parivar bna do
+                }
+            }
+        } else {
+            existingGuest.setFamily(null);
+        }
 
         return this.guestRepo.save(existingGuest);
     }

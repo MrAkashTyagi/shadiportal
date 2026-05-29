@@ -12,12 +12,13 @@ import java.util.List;
 @RestController
 @Controller
 @RequestMapping("/guests")
+@CrossOrigin(origins = "http://localhost:4200")
 public class GuestController {
 
     @Autowired
     private GuestServiceImpl guestService;
 
-    @RequestMapping("/getAllGuests")
+    @RequestMapping(value = "/getAllGuests", method = RequestMethod.GET)
     public List<Guest> getAllGuests(){
         return this.guestService.getAllGuests();
     }
@@ -41,6 +42,7 @@ public class GuestController {
 
     @PutMapping("/{id}")
     public Guest updateGuest(@PathVariable Integer id, @RequestBody Guest guest){
+        guest.setId(id);
         return this.guestService.updateGuest(id, guest);
     }
 

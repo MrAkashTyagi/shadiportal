@@ -8,4 +8,7 @@ import java.util.Optional;
 
 public interface FamilyRepo extends JpaRepository<Family,Integer> {
     Optional<Family> findByFamilyName(String familyName);
+
+    public Optional<Family> findByFamilyNameIgnoreCase(String familyName);
+
 }

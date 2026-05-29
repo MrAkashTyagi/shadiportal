@@ -14,7 +14,6 @@ public class Family {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "family_id")
     private Integer id;
     private String familyName;
 
