@@ -1,6 +1,8 @@
 package com.bigsquare.ShadiPortal.entities;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import org.hibernate.annotations.AnyDiscriminatorImplicitValues;
 import org.springframework.boot.autoconfigure.web.WebProperties;
@@ -22,7 +24,8 @@ public class Family {
     @JsonIgnoreProperties("family")
     private List<Guest> guestList;
 
-    public Family(Integer id, String familyName, List<Guest> guestList) {
+    @JsonCreator
+    public Family(@JsonProperty("id") Integer id,@JsonProperty("familyName") String familyName,@JsonProperty("guestList") List<Guest> guestList) {
         this.id = id;
         this.familyName = familyName;
         this.guestList = guestList;
@@ -30,6 +33,7 @@ public class Family {
 
     public Family() {
     }
+
 
     public Integer getId() {
         return id;

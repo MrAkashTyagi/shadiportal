@@ -19,6 +19,13 @@ public class FamilyServiceImpl implements FamilyService {
 
     @Override
     public Family createFamily(Family family) {
+
+        Optional<Family> existingFamily = this.familyRepo.findByFamilyName(family.getFamilyName().trim());
+        if (existingFamily.isPresent()){
+            System.out.println("Family with this name is present in the database !!");
+            return existingFamily.get();
+        }
+
         return this.familyRepo.save(family);
     }
 

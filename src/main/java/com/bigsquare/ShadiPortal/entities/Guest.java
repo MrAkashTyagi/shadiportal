@@ -1,5 +1,6 @@
 package com.bigsquare.ShadiPortal.entities;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
@@ -12,6 +13,25 @@ public class Guest {
     @Column (name = "guest_id")
     private Integer id;
     private String name;
+
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinColumn(name = "family_id")
+    @JsonIgnoreProperties("guestList")
+    private Family family;
+
+
+
+    public Guest(Integer id, String name, String phoneNumber, String whatsapp_Number, String email, String guestCategory, String gender, String adultOrchild, Family family) {
+        this.id = id;
+        this.name = name;
+        this.phoneNumber = phoneNumber;
+        this.whatsapp_Number = whatsapp_Number;
+        this.email = email;
+        this.guestCategory = guestCategory;
+        this.gender = gender;
+        this.adultOrchild = adultOrchild;
+        this.family = family;
+    }
 
     public Family getFamily() {
         return family;
@@ -28,23 +48,8 @@ public class Guest {
     private String gender;
     private String adultOrchild;
 
-    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinColumn(name = "family_id")
-    @JsonIgnoreProperties("guestList")
 
-    private Family family;
 
-    public Guest(Integer id, String name, String phoneNumber, String whatsapp_Number, String email, String guestCategory, String gender, String adultOrchild, Family family) {
-        this.id = id;
-        this.name = name;
-        this.phoneNumber = phoneNumber;
-        this.whatsapp_Number = whatsapp_Number;
-        this.email = email;
-        this.guestCategory = guestCategory;
-        this.gender = gender;
-        this.adultOrchild = adultOrchild;
-        this.family = family;
-    }
 
     @ManyToOne
     User user;
