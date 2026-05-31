@@ -21,5 +21,5 @@ public interface GuestService {
     public Guest updateGuest(Integer id, Guest guest);
 
 
-    Page<Guest> getGuestWithPagination(int page, int size);
+    Page<Guest> getGuestWithPagination(int page, int size, String search);
 }

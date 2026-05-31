@@ -115,9 +115,16 @@ public class GuestServiceImpl implements GuestService {
     }
 
     @Override
-    public Page<Guest> getGuestWithPagination(int page, int size) {
+    public Page<Guest> getGuestWithPagination(int page, int size, String search) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
-        return this.guestRepo.findAll(pageable);
+
+        // Agar search string null ya empty hai, toh normal sara data paged return karein
+        if (search == null || search.trim().isEmpty()) {
+            return this.guestRepo.findAll(pageable);
+        }
+
+        // Agar search me kuch value hai, toh custom query chalayein
+        return this.guestRepo.findBySearchQuery(search.trim(), pageable);
     }
 
     @Override
