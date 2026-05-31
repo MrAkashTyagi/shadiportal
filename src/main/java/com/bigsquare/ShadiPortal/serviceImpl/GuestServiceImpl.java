@@ -7,6 +7,11 @@ import com.bigsquare.ShadiPortal.repositories.GuestRepo;
 import com.bigsquare.ShadiPortal.services.GuestService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -107,6 +112,12 @@ public class GuestServiceImpl implements GuestService {
         }
 
         return this.guestRepo.save(existingGuest);
+    }
+
+    @Override
+    public Page<Guest> getGuestWithPagination(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        return this.guestRepo.findAll(pageable);
     }
 
     @Override

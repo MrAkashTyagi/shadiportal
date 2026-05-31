@@ -2,7 +2,9 @@ package com.bigsquare.ShadiPortal.controllers;
 
 import com.bigsquare.ShadiPortal.entities.Guest;
 import com.bigsquare.ShadiPortal.serviceImpl.GuestServiceImpl;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +19,14 @@ public class GuestController {
 
     @Autowired
     private GuestServiceImpl guestService;
+
+    // get guests as per pagination
+    @GetMapping("/guest")
+    public Page<Guest> getAllGuests(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size){
+        return this.guestService.getGuestWithPagination(page, size);
+    }
 
     @RequestMapping(value = "/getAllGuests", method = RequestMethod.GET)
     public List<Guest> getAllGuests(){
@@ -39,7 +49,6 @@ public class GuestController {
     }
 
 //    update guest
-
     @PutMapping("/{id}")
     public Guest updateGuest(@PathVariable Integer id, @RequestBody Guest guest){
         guest.setId(id);
