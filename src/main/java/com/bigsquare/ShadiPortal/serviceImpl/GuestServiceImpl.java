@@ -116,7 +116,7 @@ public class GuestServiceImpl implements GuestService {
 
     @Override
     public Page<Guest> getGuestWithPagination(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
         return this.guestRepo.findAll(pageable);
     }
 
