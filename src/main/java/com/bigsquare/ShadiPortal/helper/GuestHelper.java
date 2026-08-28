@@ -78,7 +78,10 @@ public class GuestHelper {
 
     public static boolean checkExcelFormat(MultipartFile file) {
         String contentType = file.getContentType();
-        return contentType != null && contentType.equals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+//        return contentType != null && contentType.equals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                .equals(contentType)
+                || "application/octet-stream".equals(contentType);
     }
 
     // CONVERT EXCEL TO LIST OF GUESTS (100% PRO COMPILER COMPATIBLE VALUE SEQUENCE)
@@ -99,23 +102,23 @@ public class GuestHelper {
                 guest.setId(null);
 
                 // Index 1: email
-                Cell cell1 = row.getCell(1);
+                Cell cell1 = row.getCell(0);
                 guest.setEmail(dataFormatter.formatCellValue(cell1));
 
                 // Index 2: name
-                Cell cell2 = row.getCell(2);
+                Cell cell2 = row.getCell(1);
                 guest.setName(dataFormatter.formatCellValue(cell2));
 
                 // Index 3: gender
-                Cell cell3 = row.getCell(3);
+                Cell cell3 = row.getCell(2);
                 guest.setGender(dataFormatter.formatCellValue(cell3));
 
                 // Index 4: guestCategory
-                Cell cell4 = row.getCell(4);
+                Cell cell4 = row.getCell(3);
                 guest.setGuestCategory(dataFormatter.formatCellValue(cell4));
 
                 // Index 5: adultOrChild ("Ad" mapped to "Adult", "Ch" mapped to "Child")
-                Cell cell5 = row.getCell(5);
+                Cell cell5 = row.getCell(4);
                 String type = dataFormatter.formatCellValue(cell5).trim();
                 if (type.equalsIgnoreCase("Ad")) {
                     guest.setAdultOrchild("Adult");
@@ -126,16 +129,16 @@ public class GuestHelper {
                 }
 
                 // Index 6: phoneNumber
-                Cell cell6 = row.getCell(6);
+                Cell cell6 = row.getCell(5);
                 guest.setPhoneNumber(dataFormatter.formatCellValue(cell6));
 
                 // Index 7: whatsapp_Number
-                Cell cell7 = row.getCell(7);
+                Cell cell7 = row.getCell(6);
                 String whatsapp = dataFormatter.formatCellValue(cell7).trim();
                 guest.setWhatsapp_Number(whatsapp.isEmpty() ? guest.getPhoneNumber() : whatsapp);
 
                 // Index 8: familyId relational foreign key configuration binding
-                Cell cell8 = row.getCell(8);
+                Cell cell8 = row.getCell(7);
                 if (cell8 != null) {
                     try {
                         Integer familyIdPointer = null;
