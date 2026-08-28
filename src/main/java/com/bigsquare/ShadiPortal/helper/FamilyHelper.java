@@ -48,6 +48,7 @@ public class FamilyHelper {
                 Row dataRow = sheet.createRow(rowIndex++);
                 dataRow.createCell(0).setCellValue(family.getId());
                 dataRow.createCell(1).setCellValue(family.getFamilyName());
+                System.out.println(family.getFamilyName());
 
             }
             workbook.write(out);
@@ -65,11 +66,16 @@ public class FamilyHelper {
     //check if the file is of excel type
     public static boolean checkExcelFormat(MultipartFile file) {
         String contentType = file.getContentType();
-        if (contentType.equals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) {
-            return true;
-        } else {
-            return false;
-        }
+        System.out.println(contentType);
+//        if (contentType.equals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) {
+//            return true;
+//        } else {
+//            return false;
+//        }
+
+        return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                .equals(contentType)
+                || "application/octet-stream".equals(contentType);
     }
 
     //converting excel to list of guests
@@ -80,16 +86,12 @@ public class FamilyHelper {
         try (XSSFWorkbook workbook = new XSSFWorkbook(is)) {
             // Hamesha index 0 se sheet fetch karein taaki naam badalne par code na toote
             Sheet sheet = workbook.getSheetAt(0);
-
             int totalRows = sheet.getPhysicalNumberOfRows();
-
             // Row 1 se start karein (Row 0 header hai)
             for (int i = 1; i < totalRows; i++) {
                 Row row = sheet.getRow(i);
                 if (row == null) continue; // Agar poori row blank ho toh skip karein
-
                 Family family = new Family();
-
                 // 0: id
 //                Cell cell0 = row.getCell(0);
 //                if (cell0 != null && cell0.getCellType() == CellType.NUMERIC) {
@@ -97,17 +99,16 @@ public class FamilyHelper {
 //                }
 
                 // 1: email (Khaali hone par bhi safe)
-                Cell cell1 = row.getCell(1);
-                family.setFamilyName(dataFormatter.formatCellValue(cell1));
-
-
+                Cell cell0 = row.getCell(0);
+                family.setFamilyName(dataFormatter.formatCellValue(cell0));
+                String familyName = dataFormatter.formatCellValue(cell0);
+                System.out.println("Family Name from Excel = " + familyName);
                 families.add(family);
             }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return families;
     }
 
