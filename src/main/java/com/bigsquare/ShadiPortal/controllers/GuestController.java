@@ -25,8 +25,25 @@ public class GuestController {
     public Page<Guest> getAllGuests(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false, defaultValue = "") String search){
-        return this.guestService.getGuestWithPagination(page, size, search);
+            @RequestParam(required = false, defaultValue = "") String search,
+            @RequestParam(required = false, defaultValue = "") String gender,
+            @RequestParam(required = false, defaultValue = "") String adultOrchild,
+            @RequestParam(required = false, defaultValue = "") String gift,
+            @RequestParam(required = false, defaultValue = "") String cash,
+            @RequestParam(required = false, defaultValue = "") String guestCategory,
+            @RequestParam(required = false, defaultValue = "") String stay
+    ){
+        return this.guestService.getGuestWithPagination(
+                page,
+                size,
+                search,
+                gender,
+                adultOrchild,
+                gift,
+                cash,
+                guestCategory,
+                stay
+        );
     }
 
     @RequestMapping(value = "/getAllGuests", method = RequestMethod.GET)
