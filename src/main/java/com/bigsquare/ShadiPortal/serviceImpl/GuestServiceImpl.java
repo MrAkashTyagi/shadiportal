@@ -81,6 +81,14 @@ public class GuestServiceImpl implements GuestService {
         existingGuest.setFamily(guest.getFamily());
         existingGuest.setPhoneNumber(guest.getPhoneNumber());
         existingGuest.setAdultOrchild(guest.getAdultOrchild());
+        existingGuest.setGift(guest.getGift());
+
+        existingGuest.setStay(guest.getStay());
+        existingGuest.setCash(guest.getCash());
+
+        System.out.println("Gift = " + guest.getGift());
+        System.out.println("Cash = " + guest.getCash());
+        System.out.println("Stay = " + guest.getStay());
 
         // 2. SAFE FAMILY LOGIC (No Null ID Crash)
         if (guest.getFamily() != null) {
@@ -110,21 +118,59 @@ public class GuestServiceImpl implements GuestService {
         } else {
             existingGuest.setFamily(null);
         }
+        System.out.println(guest);
 
         return this.guestRepo.save(existingGuest);
     }
 
     @Override
-    public Page<Guest> getGuestWithPagination(int page, int size, String search) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
+    public Page<Guest> getGuestWithPagination(int page,
+                                              int size,
+                                              String search,
+                                              String gender,
+                                              String adultOrchild,
+                                              String gift,
+                                              String cash,
+                                              String guestCategory,
+                                              String stay) {
+        Pageable pageable =
+                PageRequest.of(
+                        page,
+                        size,
+                        Sort.by("id").ascending());
+
+        String searchValue = search == null ? "" : search.trim();
+
+        String genderValue = gender == null ? "" : gender.trim();
+
+        String typeValue = adultOrchild == null ? "" : adultOrchild.trim();
+
+        String typegift =  gift == null ? "" : gift.trim();
+
+        String typestay =  stay == null ? "" : stay.trim();
+
+        String typecash =  cash == null ? "" : cash.trim();
+
+        String typeCategory = guestCategory == null ? "" : guestCategory.trim();
 
         // Agar search string null ya empty hai, toh normal sara data paged return karein
-        if (search == null || search.trim().isEmpty()) {
-            return this.guestRepo.findAll(pageable);
-        }
+//        if (search == null || search.trim().isEmpty()) {
+//            return this.guestRepo.findAll(pageable);
+//        }
 
         // Agar search me kuch value hai, toh custom query chalayein
-        return this.guestRepo.findBySearchQuery(search.trim(), pageable);
+//        return this.guestRepo.findBySearchQuery(search.trim(), pageable);
+
+        return this.guestRepo.findGuestsWithFilters(
+                searchValue,
+                genderValue,
+                typeValue,
+                typecash,
+                typegift,
+                typestay,
+                typeCategory,
+                pageable
+        );
     }
 
     @Override
