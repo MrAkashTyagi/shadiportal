@@ -3,9 +3,18 @@ package com.bigsquare.ShadiPortal.entities;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import javax.lang.model.element.NestingKind;
 
 @Entity
 @Table(name = "guest")
+@Getter
+@Setter
+@AllArgsConstructor
 public class Guest {
 
     @Id
@@ -20,17 +29,19 @@ public class Guest {
     private Family family;
 
 
-
-    public Guest(Integer id, String name, String phoneNumber, String whatsapp_Number, String email, String guestCategory, String gender, String adultOrchild, Family family) {
+    public Guest(Integer id, String name, Family family, String phoneNumber, String whatsapp_Number, String email, String guestCategory, String gender, String adultOrchild, String gift, String stay, User user) {
         this.id = id;
         this.name = name;
+        this.family = family;
         this.phoneNumber = phoneNumber;
         this.whatsapp_Number = whatsapp_Number;
         this.email = email;
         this.guestCategory = guestCategory;
         this.gender = gender;
         this.adultOrchild = adultOrchild;
-        this.family = family;
+        this.gift = gift;
+        this.stay = stay;
+        this.user = user;
     }
 
     public Family getFamily() {
@@ -47,9 +58,33 @@ public class Guest {
     private String guestCategory;
     private String gender;
     private String adultOrchild;
+    private String gift;
+    private String stay;
+    private String cash;
 
+    public String getGift() {
+        return gift;
+    }
 
+    public void setGift(String gift) {
+        this.gift = gift;
+    }
 
+    public String getStay() {
+        return stay;
+    }
+
+    public void setStay(String stay) {
+        this.stay = stay;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
 
     @ManyToOne
     User user;
@@ -130,11 +165,16 @@ public class Guest {
         return "Guest{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
+                ", family=" + family +
                 ", phoneNumber='" + phoneNumber + '\'' +
                 ", whatsapp_Number='" + whatsapp_Number + '\'' +
                 ", email='" + email + '\'' +
                 ", guestCategory='" + guestCategory + '\'' +
-
+                ", gender='" + gender + '\'' +
+                ", adultOrchild='" + adultOrchild + '\'' +
+                ", gift='" + gift + '\'' +
+                ", stay='" + stay + '\'' +
+                ", user=" + user +
                 '}';
     }
 }
