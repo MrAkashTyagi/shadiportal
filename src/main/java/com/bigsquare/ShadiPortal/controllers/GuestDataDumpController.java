@@ -22,33 +22,25 @@ import java.util.Map;
 @RequestMapping("/datadump")
 @CrossOrigin("*")
 public class GuestDataDumpController {
-
-
+    
     @Autowired
     private GuestDataDumpServiceImpl guestDataDumpService;
 
     @PostMapping("/upload")
-    public ResponseEntity<?> upload(@RequestParam("file") MultipartFile file){
-
-        if (GuestHelper.checkExcelFormat(file)){
-
+    public ResponseEntity<?> upload(@RequestParam("file") MultipartFile file) {
+        if (GuestHelper.checkExcelFormat(file)) {
             //upload
             this.guestDataDumpService.save(file);
             return ResponseEntity.ok(Map.of("message", "File is uploaded successfully !! Data is saved to db !!"));
-
-        }else {
-
+        } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please upload excel file only");
-
         }
-
     }
 
     @GetMapping("/guest")
-    public List<Guest> getAllProducts(){
+    public List<Guest> getAllProducts() {
         return this.guestDataDumpService.getAllGuests();
     }
-
 
     @RequestMapping("/download")
     public ResponseEntity<Resource> downloadExcel() throws IOException {
@@ -57,13 +49,9 @@ public class GuestDataDumpController {
         ByteArrayInputStream actualData = this.guestDataDumpService.getActualData();
         InputStreamResource file = new InputStreamResource(actualData);
         ResponseEntity<Resource> body = ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,"attachment; fileName"+fileName)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; fileName" + fileName)
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(file);
-
         return body;
     }
-
-
-
 }
