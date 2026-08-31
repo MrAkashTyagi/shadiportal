@@ -1,6 +1,8 @@
 package com.bigsquare.ShadiPortal.services;
 
 import com.bigsquare.ShadiPortal.entities.Family;
+import org.springframework.data.domain.Page;
+
 import java.util.List;
 
 public interface FamilyService {
@@ -14,5 +16,7 @@ public interface FamilyService {
     public Family getByFamilityId(Integer id);
 
     public void deleteFamily(Integer id);
+
+    Page<Family> getPaginatedFamilyResult(int page, int size, String search);
 
 }
