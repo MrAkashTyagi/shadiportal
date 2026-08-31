@@ -17,16 +17,20 @@ public class GuestHelper {
 
     // 1. HEADERS ARRAY: Sequence matching your excel layout precisely
     public static String[] HEADERS = {
-            "guest_id",       // Index 0
-            "email",          // Index 1
-            "name",           // Index 2
-            "gender",         // Index 3
-            "guestCategory",  // Index 4
-            "adultOrChild",   // Index 5
-            "phoneNumber",    // Index 6
-            "whatsapp_Number",// Index 7
-            "familyId",       // Index 8
-            "userId"          // Index 9
+            "guest_id",
+            "email",
+            "name",
+            "gender",
+            "guestCategory",
+            "adultOrChild",
+            "phoneNumber",
+            "whatsapp_Number",
+            "familyId",
+            "userId",
+            "gift",
+            "cash",
+            "stay",
+            "family"
     };
 
     public static String SHEET_NAME = "GUESTS_DETAILS";
@@ -56,6 +60,7 @@ public class GuestHelper {
                 dataRow.createCell(6).setCellValue(guest.getPhoneNumber() != null ? guest.getPhoneNumber() : "");
                 dataRow.createCell(7).setCellValue(guest.getWhatsapp_Number() != null ? guest.getWhatsapp_Number() : "");
 
+
                 if (guest.getFamily() != null) {
                     dataRow.createCell(8).setCellValue(guest.getFamily().getId());
                 } else {
@@ -63,6 +68,10 @@ public class GuestHelper {
                 }
 
                 dataRow.createCell(9).setCellValue("");
+                dataRow.createCell(10).setCellValue(guest.getGift() != null ? guest.getGift() : "");
+                dataRow.createCell(11).setCellValue(guest.getCash() != null ? guest.getCash() : "");
+                dataRow.createCell(12).setCellValue(guest.getStay() != null ? guest.getStay() : "");
+                dataRow.createCell(13).setCellValue(guest.getFamily() != null ? guest.getFamily().getFamilyName() : "");
             }
             workbook.write(out);
             return new ByteArrayInputStream(out.toByteArray());
