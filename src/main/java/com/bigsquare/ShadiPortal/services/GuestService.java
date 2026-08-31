@@ -1,6 +1,9 @@
 package com.bigsquare.ShadiPortal.services;
 
 import com.bigsquare.ShadiPortal.entities.Guest;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -30,4 +33,14 @@ public interface GuestService {
                                        String gift,
                                        String stay,
                                        String category);
+
+    ByteArrayInputStream getFilteredActualData(
+            String search,
+            String gender,
+            String adultOrchild,
+            String gift,
+            String cash,
+            String guestCategory,
+            String stay
+    ) throws IOException;
 }
