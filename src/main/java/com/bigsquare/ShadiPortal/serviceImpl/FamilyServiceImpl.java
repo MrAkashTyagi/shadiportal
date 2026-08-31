@@ -6,6 +6,10 @@ import com.bigsquare.ShadiPortal.repositories.FamilyRepo;
 import com.bigsquare.ShadiPortal.services.FamilyService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,7 +29,6 @@ public class FamilyServiceImpl implements FamilyService {
             System.out.println("Family with this name is present in the database !!");
             return existingFamily.get();
         }
-
         return this.familyRepo.save(family);
     }
 
@@ -84,4 +87,22 @@ public class FamilyServiceImpl implements FamilyService {
         }
         familyRepo.delete(family);
     }
+
+    @Override
+    public Page<Family> getPaginatedFamilyResult(int page, int size, String search) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
+        String searchValue = search == null ? "" : search.trim();
+        if (searchValue.isEmpty()) {
+
+            return this.familyRepo.findAll(pageable);
+
+        }
+            // Agar search me kuch value hai, toh custom query chalayein
+        return this.familyRepo.findBySearchQuery(
+                searchValue,
+                pageable);
+
+    }
 }
+
+
