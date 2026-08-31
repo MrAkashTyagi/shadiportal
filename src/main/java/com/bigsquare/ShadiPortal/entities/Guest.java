@@ -19,15 +19,26 @@ public class Guest {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column (name = "guest_id")
+    @Column(name = "guest_id")
     private Integer id;
     private String name;
+    private String phoneNumber;
+    private String whatsapp_Number;
+    private String email;
+    private String guestCategory;
+    private String gender;
+    private String adultOrchild;
+    private String gift;
+    private String stay;
+    private String cash;
 
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "family_id")
     @JsonIgnoreProperties("guestList")
     private Family family;
 
+    @ManyToOne
+    User user;
 
     public Guest(Integer id, String name, Family family, String phoneNumber, String whatsapp_Number, String email, String guestCategory, String gender, String adultOrchild, String gift, String stay, User user) {
         this.id = id;
@@ -51,16 +62,6 @@ public class Guest {
     public void setFamily(Family family) {
         this.family = family;
     }
-
-    private String phoneNumber;
-    private String whatsapp_Number;
-    private String email;
-    private String guestCategory;
-    private String gender;
-    private String adultOrchild;
-    private String gift;
-    private String stay;
-    private String cash;
 
     public String getGift() {
         return gift;
@@ -86,8 +87,6 @@ public class Guest {
         this.user = user;
     }
 
-    @ManyToOne
-    User user;
 
     public String getGender() {
         return gender;
