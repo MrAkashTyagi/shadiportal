@@ -3,6 +3,7 @@ package com.bigsquare.ShadiPortal.controllers;
 import com.bigsquare.ShadiPortal.entities.Family;
 import com.bigsquare.ShadiPortal.services.FamilyService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,22 +22,23 @@ public class FamilyController {
         return this.familyService.createFamily(family);
     }
 
-
     //    getAll
     @GetMapping
-    public List<Family> getAllFamilies() {
-        return this.familyService.getAllFamilies();
+    public Page<Family> getAllFamilies(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false, defaultValue = "") String search
+    ) {
+        return this.familyService.getPaginatedFamilyResult(page, size, search);
     }
 
-//    get by id
-
+    //    get by id
     @GetMapping("/{id}")
     public Family getById(@PathVariable Integer id) {
         return this.familyService.getByFamilityId(id);
     }
 
-//    updated
-
+    //    updated
     @PutMapping("/{id}")
     public Family updateFamily(@PathVariable Integer id, @RequestBody Family family) {
 
@@ -50,5 +52,10 @@ public class FamilyController {
         this.familyService.deleteFamily(id);
     }
 
+    // get all for dropdown
+    @GetMapping("/getAll")
+    public List<Family> getAllFamilies() {
+        return familyService.getAllFamilies();
+    }
 
 }
