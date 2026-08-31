@@ -1,7 +1,6 @@
 package com.bigsquare.ShadiPortal.helper;
 
 
-
 import com.bigsquare.ShadiPortal.entities.Family;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -16,8 +15,7 @@ import java.util.List;
 
 public class FamilyHelper {
 
-    public static String[] HEADERS= {
-
+    public static String[] HEADERS = {
 //            "id",
             "name"
 
@@ -40,7 +38,6 @@ public class FamilyHelper {
                 Cell cell = row.createCell(i);
                 cell.setCellValue(HEADERS[i]);
             }
-
 
             //create row: value rows
             int rowIndex = 1;
@@ -111,7 +108,4 @@ public class FamilyHelper {
         }
         return families;
     }
-
-
-
 }
