@@ -13,19 +13,18 @@ import java.util.List;
 @Table(name = "family")
 public class Family {
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private String familyName;
 
-//    @OneToMany(mappedBy = "family", cascade = CascadeType.ALL, orphanRemoval = true)
+    //    @OneToMany(mappedBy = "family", cascade = CascadeType.ALL, orphanRemoval = true)
     @OneToMany(mappedBy = "family")
     @JsonIgnoreProperties("family")
     private List<Guest> guestList;
 
     @JsonCreator
-    public Family(@JsonProperty("id") Integer id,@JsonProperty("familyName") String familyName,@JsonProperty("guestList") List<Guest> guestList) {
+    public Family(@JsonProperty("id") Integer id, @JsonProperty("familyName") String familyName, @JsonProperty("guestList") List<Guest> guestList) {
         this.id = id;
         this.familyName = familyName;
         this.guestList = guestList;
@@ -33,7 +32,6 @@ public class Family {
 
     public Family() {
     }
-
 
     public Integer getId() {
         return id;
@@ -50,7 +48,6 @@ public class Family {
     public void setFamilyName(String familyName) {
         this.familyName = familyName;
     }
-
 
     public List<Guest> getGuestList() {
         return guestList;
