@@ -18,47 +18,46 @@ public class HomeController {
 
     @Autowired
     UserRepo userRepo;
-//home handler
+
+    //home handler
     @RequestMapping(value = "/", method = RequestMethod.GET)
-    public String homeController(Model model){
-        model.addAttribute("title","Shadi - Portal to manage everthing");
+    public String homeController(Model model) {
+        model.addAttribute("title", "Shadi - Portal to manage everthing");
         return "home";
     }
-// about handler
-    @RequestMapping(value = "/about", method = RequestMethod.GET)
-    public String about(Model model){
-        model.addAttribute("title","shadi - a portal to amnage everythign");
-        return "about";
 
+    // about handler
+    @RequestMapping(value = "/about", method = RequestMethod.GET)
+    public String about(Model model) {
+        model.addAttribute("title", "shadi - a portal to amnage everythign");
+        return "about";
     }
 
-//    signup handler
+    //    signup handler
     @RequestMapping(value = "/signup", method = RequestMethod.GET)
-    public String signUp(Model model){
-
-        model.addAttribute("user",new User());
-
-        model.addAttribute("title","Register - Shadi Portal");
+    public String signUp(Model model) {
+        model.addAttribute("user", new User());
+        model.addAttribute("title", "Register - Shadi Portal");
         return "signup";
     }
 
-//    handler for regestring user
-    @RequestMapping(value = "/do_register",method = RequestMethod.POST)
+    //    handler for regestring user
+    @RequestMapping(value = "/do_register", method = RequestMethod.POST)
     public String registerUser(@Valid @ModelAttribute("user") User user,
                                BindingResult bindingResult,
-                               @RequestParam(value = "agreement",defaultValue = "false")boolean agreement,
+                               @RequestParam(value = "agreement", defaultValue = "false") boolean agreement,
                                Model model,
-                               HttpSession session){
+                               HttpSession session) {
 
-        try{
-            if (!agreement){
+        try {
+            if (!agreement) {
                 System.out.println("You have nor checked the agreement !!");
                 throw new Exception("You have nor checked the agreement !!");
             }
 
-            if (bindingResult.hasErrors()){
-                System.out.println("Error :"+bindingResult.toString());
-                model.addAttribute("user",user);
+            if (bindingResult.hasErrors()) {
+                System.out.println("Error :" + bindingResult.toString());
+                model.addAttribute("user", user);
                 return "signup";
             }
 
@@ -68,24 +67,21 @@ public class HomeController {
 
             User result = userRepo.save(user);
 
-            System.out.println("Agreement : "+agreement);
-            System.out.println("User : "+user);
+            System.out.println("Agreement : " + agreement);
+            System.out.println("User : " + user);
 
 
-            model.addAttribute("user",new User());
+            model.addAttribute("user", new User());
 
-            session.setAttribute("message",new Message("Successfully registered", "alert-success"));
+            session.setAttribute("message", new Message("Successfully registered", "alert-success"));
 
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-            model.addAttribute("user",user);
-            session.setAttribute("message", new Message("Something went wrong!!"+e.getMessage(), "alert-danger"));
+            model.addAttribute("user", user);
+            session.setAttribute("message", new Message("Something went wrong!!" + e.getMessage(), "alert-danger"));
             return "signup";
-
         }
-
         return "signup";
-}
+    }
 
 }
