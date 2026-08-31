@@ -3,12 +3,19 @@ package com.bigsquare.ShadiPortal.controllers;
 import com.bigsquare.ShadiPortal.entities.Guest;
 import com.bigsquare.ShadiPortal.serviceImpl.GuestServiceImpl;
 
+import org.springframework.core.io.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -32,7 +39,7 @@ public class GuestController {
             @RequestParam(required = false, defaultValue = "") String cash,
             @RequestParam(required = false, defaultValue = "") String guestCategory,
             @RequestParam(required = false, defaultValue = "") String stay
-    ){
+    ) {
         return this.guestService.getGuestWithPagination(
                 page,
                 size,
@@ -47,14 +54,14 @@ public class GuestController {
     }
 
     @RequestMapping(value = "/getAllGuests", method = RequestMethod.GET)
-    public List<Guest> getAllGuests(){
+    public List<Guest> getAllGuests() {
         return this.guestService.getAllGuests();
     }
 
 //    create Guests
 
     @PostMapping
-    public Guest createGuest(@RequestBody Guest guest){
+    public Guest createGuest(@RequestBody Guest guest) {
         Guest guest1 = this.guestService.saveGuest(guest);
         return guest1;
     }
@@ -62,13 +69,13 @@ public class GuestController {
 //    get guest by id
 
     @GetMapping("/{id}")
-    public Guest getById(@PathVariable Integer id){
+    public Guest getById(@PathVariable Integer id) {
         return this.guestService.getById(id);
     }
 
-//    update guest
+    //    update guest
     @PutMapping("/{id}")
-    public Guest updateGuest(@PathVariable Integer id, @RequestBody Guest guest){
+    public Guest updateGuest(@PathVariable Integer id, @RequestBody Guest guest) {
         guest.setId(id);
         return this.guestService.updateGuest(id, guest);
     }
@@ -76,27 +83,80 @@ public class GuestController {
 //    delete guest
 
     @DeleteMapping("/{id}")
-    public void deleteGuest(@PathVariable Integer id){
+    public void deleteGuest(@PathVariable Integer id) {
         this.guestService.delete(id);
     }
 
     @RequestMapping(value = "/guestList", method = RequestMethod.GET)
-    public String guestController(){
+    public String guestController() {
         return "guest";
     }
 
 //    getting guests
 
-    @RequestMapping(value = "/getGuests",method = RequestMethod.GET)
-    public String guest(Model model){
+    @RequestMapping(value = "/getGuests", method = RequestMethod.GET)
+    public String guest(Model model) {
         List<Guest> allGuests = guestService.getAllGuests();
         System.out.println(allGuests);
-        model.addAttribute("guests",allGuests);
+        model.addAttribute("guests", allGuests);
 
         List<String> names = List.of("akash", "anuj", "arjun");
-        model.addAttribute("names",names);
+        model.addAttribute("names", names);
         return "guest";
 
+    }
+
+//    @RequestMapping("/download")
+//    public ResponseEntity<Resource> downloadExcel() throws IOException {
+//
+//        String fileName = "products.xlsx";
+//        ByteArrayInputStream actualData = this.guestService.getActualData();
+//        InputStreamResource file = new InputStreamResource(actualData);
+//        ResponseEntity<Resource> body = ResponseEntity.ok()
+//                .header(HttpHeaders.CONTENT_DISPOSITION,"attachment; fileName"+fileName)
+//                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+//                .body(file);
+//
+//        return body;
+//    }
+
+    @GetMapping("/download")
+    public ResponseEntity<Resource> downloadExcel(
+            @RequestParam(required = false, defaultValue = "") String search,
+            @RequestParam(required = false, defaultValue = "") String gender,
+            @RequestParam(required = false, defaultValue = "") String adultOrchild,
+            @RequestParam(required = false, defaultValue = "") String guestCategory,
+            @RequestParam(required = false, defaultValue = "") String gift,
+            @RequestParam(required = false, defaultValue = "") String stay,
+            @RequestParam(required = false, defaultValue = "") String cash
+    ) throws IOException {
+
+        ByteArrayInputStream actualData =
+                this.guestService.getFilteredActualData(
+                        search,
+                        gender,
+                        adultOrchild,
+                        guestCategory,
+                        gift,
+                        stay,
+                        cash
+                );
+
+        InputStreamResource file = new InputStreamResource(actualData);
+
+        String fileName = "guests.xlsx";
+
+        return ResponseEntity.ok()
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + fileName + "\""
+                )
+                .contentType(
+                        MediaType.parseMediaType(
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        )
+                )
+                .body(file);
     }
 
 }
