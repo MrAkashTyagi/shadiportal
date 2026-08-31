@@ -2,6 +2,7 @@ package com.bigsquare.ShadiPortal.serviceImpl;
 
 import com.bigsquare.ShadiPortal.entities.Family;
 import com.bigsquare.ShadiPortal.entities.Guest;
+import com.bigsquare.ShadiPortal.helper.GuestHelper;
 import com.bigsquare.ShadiPortal.repositories.FamilyRepo;
 import com.bigsquare.ShadiPortal.repositories.GuestRepo;
 import com.bigsquare.ShadiPortal.services.GuestService;
@@ -14,6 +15,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,11 +30,8 @@ public class GuestServiceImpl implements GuestService {
     GuestRepo guestRepo;
 
     public Guest saveGuest(Guest guest) {
-
         if (guest.getFamily() != null && guest.getFamily().getFamilyName() != null) {
-
             String inputFamilyName = guest.getFamily().getFamilyName().trim();
-
             Optional<Family> existingFamily = familyRepo.findByFamilyNameIgnoreCase(inputFamilyName);
             if (existingFamily.isPresent()) {
                 guest.setFamily(existingFamily.get());
@@ -41,9 +41,7 @@ public class GuestServiceImpl implements GuestService {
 
             // Family existingFamily = familyRepo.findById(guest.getFamily().getId()).orElseThrow(() -> new EntityNotFoundException("Family not found"));
             //guest.setFamily(existingFamily);
-
         }
-
         return this.guestRepo.save(guest);
     }
 
@@ -54,10 +52,8 @@ public class GuestServiceImpl implements GuestService {
 
     @Override
     public Guest getById(Integer id) {
-
         Guest guest = this.guestRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Guest With given id is not found in the database !!"));
         return guest;
-
     }
 
     @Override
@@ -70,7 +66,6 @@ public class GuestServiceImpl implements GuestService {
     public Guest updateGuest(Integer id, Guest guest) {
 
 //        get user
-
         Guest existingGuest = this.guestRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Entity not found !!"));
 
         existingGuest.setName(guest.getName());
@@ -82,13 +77,8 @@ public class GuestServiceImpl implements GuestService {
         existingGuest.setPhoneNumber(guest.getPhoneNumber());
         existingGuest.setAdultOrchild(guest.getAdultOrchild());
         existingGuest.setGift(guest.getGift());
-
         existingGuest.setStay(guest.getStay());
         existingGuest.setCash(guest.getCash());
-
-        System.out.println("Gift = " + guest.getGift());
-        System.out.println("Cash = " + guest.getCash());
-        System.out.println("Stay = " + guest.getStay());
 
         // 2. SAFE FAMILY LOGIC (No Null ID Crash)
         if (guest.getFamily() != null) {
@@ -145,11 +135,11 @@ public class GuestServiceImpl implements GuestService {
 
         String typeValue = adultOrchild == null ? "" : adultOrchild.trim();
 
-        String typegift =  gift == null ? "" : gift.trim();
+        String typegift = gift == null ? "" : gift.trim();
 
-        String typestay =  stay == null ? "" : stay.trim();
+        String typestay = stay == null ? "" : stay.trim();
 
-        String typecash =  cash == null ? "" : cash.trim();
+        String typecash = cash == null ? "" : cash.trim();
 
         String typeCategory = guestCategory == null ? "" : guestCategory.trim();
 
@@ -165,10 +155,10 @@ public class GuestServiceImpl implements GuestService {
                 searchValue,
                 genderValue,
                 typeValue,
-                typecash,
+                typeCategory,
                 typegift,
                 typestay,
-                typeCategory,
+                typecash,
                 pageable
         );
     }
@@ -177,4 +167,57 @@ public class GuestServiceImpl implements GuestService {
     public Guest createGuest(Guest guest) {
         return this.guestRepo.save(guest);
     }
+
+    public ByteArrayInputStream getActualData() throws IOException {
+        List<Guest> guestList = this.guestRepo.findAll();
+        System.out.println(guestList);
+        ByteArrayInputStream stream = GuestHelper.dataToExcel(guestList);
+        return stream;
+    }
+
+    public ByteArrayInputStream getFilteredActualData(
+            String search,
+            String gender,
+            String adultOrchild,
+            String gift,
+            String cash,
+            String guestCategory,
+            String stay
+    ) throws IOException {
+
+        String searchValue =
+                search == null ? "" : search.trim();
+
+        String genderValue =
+                gender == null ? "" : gender.trim();
+
+        String typeValue =
+                adultOrchild == null ? "" : adultOrchild.trim();
+
+        String giftValue =
+                gift == null ? "" : gift.trim();
+
+        String cashValue =
+                cash == null ? "" : cash.trim();
+
+        String categoryValue =
+                guestCategory == null ? "" : guestCategory.trim();
+
+        String stayValue =
+                stay == null ? "" : stay.trim();
+
+        List<Guest> guestList =
+                this.guestRepo.findAllGuestsWithFilters(
+                        searchValue,
+                        genderValue,
+                        typeValue,
+                        categoryValue,
+                        giftValue,
+                        stayValue,
+                        cashValue
+                );
+
+        return GuestHelper.dataToExcel(guestList);
+    }
+
 }
