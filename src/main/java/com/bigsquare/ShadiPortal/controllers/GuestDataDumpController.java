@@ -22,7 +22,7 @@ import java.util.Map;
 @RequestMapping("/datadump")
 @CrossOrigin("*")
 public class GuestDataDumpController {
-    
+
     @Autowired
     private GuestDataDumpServiceImpl guestDataDumpService;
 
