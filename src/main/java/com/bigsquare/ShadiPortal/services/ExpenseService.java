@@ -14,7 +14,7 @@ public interface ExpenseService {
     Expense createExpense(Expense expense, MultipartFile bill);
 
     // Update
-    Expense updateExpense(Integer id, Expense expense);
+    Expense updateExpense(Integer id, Expense expense, MultipartFile bill);
 
     // Get By Id
     Expense getExpenseById(Integer id);
