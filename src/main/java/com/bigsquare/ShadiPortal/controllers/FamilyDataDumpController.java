@@ -54,7 +54,7 @@ public class FamilyDataDumpController {
     @RequestMapping("/download")
     public ResponseEntity<Resource> downloadExcel() throws IOException {
 
-        String fileName = "products.xlsx";
+        String fileName = "family.xlsx";
         ByteArrayInputStream actualData = this.familyDataDumpService.getActualData();
         InputStreamResource file = new InputStreamResource(actualData);
         ResponseEntity<Resource> body = ResponseEntity.ok()
