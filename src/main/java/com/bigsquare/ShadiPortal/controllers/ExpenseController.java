@@ -1,4 +1,3 @@
-
 package com.bigsquare.ShadiPortal.controllers;
 
 import com.bigsquare.ShadiPortal.dto.ExpenseCategorySummaryDto;
@@ -136,13 +135,55 @@ public class ExpenseController {
     }
 
     // Update Expense
-    @PutMapping("/{id}")
+//    @PutMapping("/{id}")
+//    public Expense updateExpense(
+//            @PathVariable Integer id,
+//            @RequestBody Expense expense
+//    ) {
+//        return expenseService.updateExpense(id, expense);
+//    }
+
+    @PutMapping(
+            value = "/{id}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
     public Expense updateExpense(
             @PathVariable Integer id,
-            @RequestBody Expense expense
+            @RequestPart("expense") String expenseJson,
+            @RequestPart(
+                    value = "bill",
+                    required = false
+            ) MultipartFile bill
     ) {
-        return expenseService.updateExpense(id, expense);
+
+        try {
+
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.findAndRegisterModules();
+
+            Expense expense =
+                    mapper.readValue(
+                            expenseJson,
+                            Expense.class
+                    );
+
+            return expenseService.updateExpense(
+                    id,
+                    expense,
+                    bill
+            );
+
+        } catch (Exception e) {
+
+            throw new RuntimeException(
+                    "Error updating expense",
+                    e
+            );
+
+        }
+
     }
+
 
     // Get All Expenses (dropdown/report use)
     @GetMapping("/all")
