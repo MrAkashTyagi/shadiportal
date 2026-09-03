@@ -71,7 +71,7 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     @Override
-    public Expense updateExpense(Integer id, Expense expense) {
+    public Expense updateExpense(Integer id, Expense expense, MultipartFile bill) {
 
         Expense existingExpense =
                 expenseRepo.findById(id)
@@ -99,10 +99,55 @@ public class ExpenseServiceImpl implements ExpenseService {
         existingExpense.setPaidBy(
                 expense.getPaidBy()
         );
+//
+//        existingExpense.setBillPath(
+//                expense.getBillPath()
+//        );
 
-        existingExpense.setBillPath(
-                expense.getBillPath()
-        );
+        try {
+
+            if (bill != null && !bill.isEmpty()) {
+
+                // Purani file delete karo
+                if (
+                        existingExpense.getBillPath() != null &&
+                                !existingExpense.getBillPath().isBlank()
+                ) {
+
+                    Files.deleteIfExists(
+                            Paths.get(
+                                    existingExpense.getBillPath()
+                            )
+                    );
+
+                }
+
+                String fileName =
+                        bill.getOriginalFilename();
+
+                Path uploadPath =
+                        Paths.get("uploads/bills");
+
+                Files.createDirectories(uploadPath);
+
+                Path filePath =
+                        uploadPath.resolve(fileName);
+
+                bill.transferTo(filePath);
+
+                existingExpense.setBillPath(
+                        filePath.toString()
+                );
+            }
+
+        } catch (IOException e) {
+
+            throw new RuntimeException(
+                    "Error updating bill",
+                    e
+            );
+
+        }
 
         existingExpense.setExpenseDate(
                 expense.getExpenseDate()
