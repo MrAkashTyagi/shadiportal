@@ -42,6 +42,7 @@ public class GuestServiceImpl implements GuestService {
             // Family existingFamily = familyRepo.findById(guest.getFamily().getId()).orElseThrow(() -> new EntityNotFoundException("Family not found"));
             //guest.setFamily(existingFamily);
         }
+        
         return this.guestRepo.save(guest);
     }
 
