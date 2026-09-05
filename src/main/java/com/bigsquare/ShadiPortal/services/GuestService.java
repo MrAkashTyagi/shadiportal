@@ -1,5 +1,7 @@
 package com.bigsquare.ShadiPortal.services;
 
+import com.bigsquare.ShadiPortal.dto.GuestCategorySummaryDto;
+import com.bigsquare.ShadiPortal.dto.GuestSummaryDto;
 import com.bigsquare.ShadiPortal.entities.Guest;
 
 import java.io.ByteArrayInputStream;
@@ -32,7 +34,8 @@ public interface GuestService {
                                        String cash,
                                        String gift,
                                        String stay,
-                                       String category);
+                                       String category,
+                                       Boolean invitationSent);
 
     ByteArrayInputStream getFilteredActualData(
             String search,
@@ -41,6 +44,11 @@ public interface GuestService {
             String gift,
             String cash,
             String guestCategory,
-            String stay
+            String stay,
+            Boolean invitationSent
     ) throws IOException;
+
+    GuestSummaryDto getGuestSummary();
+
+    List<GuestCategorySummaryDto> getGuestCategorySummary();
 }
