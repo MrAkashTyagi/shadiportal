@@ -1,5 +1,7 @@
 package com.bigsquare.ShadiPortal.serviceImpl;
 
+import com.bigsquare.ShadiPortal.dto.GuestCategorySummaryDto;
+import com.bigsquare.ShadiPortal.dto.GuestSummaryDto;
 import com.bigsquare.ShadiPortal.entities.Family;
 import com.bigsquare.ShadiPortal.entities.Guest;
 import com.bigsquare.ShadiPortal.helper.GuestHelper;
@@ -42,7 +44,7 @@ public class GuestServiceImpl implements GuestService {
             // Family existingFamily = familyRepo.findById(guest.getFamily().getId()).orElseThrow(() -> new EntityNotFoundException("Family not found"));
             //guest.setFamily(existingFamily);
         }
-        
+
         return this.guestRepo.save(guest);
     }
 
@@ -80,6 +82,7 @@ public class GuestServiceImpl implements GuestService {
         existingGuest.setGift(guest.getGift());
         existingGuest.setStay(guest.getStay());
         existingGuest.setCash(guest.getCash());
+        existingGuest.setInvitationSent(guest.getInvitationSent());
 
         // 2. SAFE FAMILY LOGIC (No Null ID Crash)
         if (guest.getFamily() != null) {
@@ -123,7 +126,8 @@ public class GuestServiceImpl implements GuestService {
                                               String gift,
                                               String cash,
                                               String guestCategory,
-                                              String stay) {
+                                              String stay,
+                                              Boolean invitationSent) {
         Pageable pageable =
                 PageRequest.of(
                         page,
@@ -160,6 +164,7 @@ public class GuestServiceImpl implements GuestService {
                 typegift,
                 typestay,
                 typecash,
+                invitationSent,
                 pageable
         );
     }
@@ -183,7 +188,8 @@ public class GuestServiceImpl implements GuestService {
             String gift,
             String cash,
             String guestCategory,
-            String stay
+            String stay,
+            Boolean invitationSent
     ) throws IOException {
 
         String searchValue =
@@ -219,6 +225,23 @@ public class GuestServiceImpl implements GuestService {
                 );
 
         return GuestHelper.dataToExcel(guestList);
+    }
+
+    @Override
+    public GuestSummaryDto getGuestSummary() {
+
+        return new GuestSummaryDto(
+                guestRepo.count(),
+                guestRepo.countByInvitationSentTrue(),
+                guestRepo.countPendingInvitations(),
+                guestRepo.countByStay("Yes")
+        );
+
+    }
+
+    @Override
+    public List<GuestCategorySummaryDto> getGuestCategorySummary() {
+        return guestRepo.getGuestCategorySummary();
     }
 
 }
