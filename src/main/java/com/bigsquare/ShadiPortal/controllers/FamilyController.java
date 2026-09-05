@@ -1,9 +1,11 @@
 package com.bigsquare.ShadiPortal.controllers;
 
+import com.bigsquare.ShadiPortal.dto.FamilySummaryDto;
 import com.bigsquare.ShadiPortal.entities.Family;
 import com.bigsquare.ShadiPortal.services.FamilyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -56,6 +58,14 @@ public class FamilyController {
     @GetMapping("/getAll")
     public List<Family> getAllFamilies() {
         return familyService.getAllFamilies();
+    }
+
+    @GetMapping("/summary")
+    public ResponseEntity<FamilySummaryDto> getFamilySummary() {
+
+        return ResponseEntity.ok(
+                familyService.getFamilySummary()
+        );
     }
 
 }
