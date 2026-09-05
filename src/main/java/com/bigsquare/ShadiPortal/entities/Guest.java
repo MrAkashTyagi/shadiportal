@@ -31,6 +31,7 @@ public class Guest {
     private String gift;
     private String stay;
     private String cash;
+    private Boolean invitationSent = false;
 
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "family_id")
