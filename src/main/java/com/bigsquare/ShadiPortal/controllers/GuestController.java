@@ -1,5 +1,7 @@
 package com.bigsquare.ShadiPortal.controllers;
 
+import com.bigsquare.ShadiPortal.dto.GuestCategorySummaryDto;
+import com.bigsquare.ShadiPortal.dto.GuestSummaryDto;
 import com.bigsquare.ShadiPortal.entities.Guest;
 import com.bigsquare.ShadiPortal.serviceImpl.GuestServiceImpl;
 
@@ -38,7 +40,8 @@ public class GuestController {
             @RequestParam(required = false, defaultValue = "") String gift,
             @RequestParam(required = false, defaultValue = "") String cash,
             @RequestParam(required = false, defaultValue = "") String guestCategory,
-            @RequestParam(required = false, defaultValue = "") String stay
+            @RequestParam(required = false, defaultValue = "") String stay,
+            @RequestParam(required = false, defaultValue = "") Boolean invitationSent
     ) {
         return this.guestService.getGuestWithPagination(
                 page,
@@ -49,7 +52,8 @@ public class GuestController {
                 gift,
                 cash,
                 guestCategory,
-                stay
+                stay,
+                invitationSent
         );
     }
 
@@ -128,7 +132,11 @@ public class GuestController {
             @RequestParam(required = false, defaultValue = "") String guestCategory,
             @RequestParam(required = false, defaultValue = "") String gift,
             @RequestParam(required = false, defaultValue = "") String stay,
-            @RequestParam(required = false, defaultValue = "") String cash
+            @RequestParam(required = false, defaultValue = "") String cash,
+            @RequestParam(
+                    required = false
+            )
+            Boolean invitationSent
     ) throws IOException {
 
         ByteArrayInputStream actualData =
@@ -139,7 +147,8 @@ public class GuestController {
                         guestCategory,
                         gift,
                         stay,
-                        cash
+                        cash,
+                        invitationSent
                 );
 
         InputStreamResource file = new InputStreamResource(actualData);
@@ -157,6 +166,23 @@ public class GuestController {
                         )
                 )
                 .body(file);
+    }
+
+    @GetMapping("/summary")
+    public ResponseEntity<GuestSummaryDto> getSummary() {
+
+        return ResponseEntity.ok(
+                guestService.getGuestSummary()
+        );
+    }
+
+    @GetMapping("/category-summary")
+    public ResponseEntity<List<GuestCategorySummaryDto>>
+    getGuestCategorySummary() {
+
+        return ResponseEntity.ok(
+                guestService.getGuestCategorySummary()
+        );
     }
 
 }
