@@ -1,8 +1,10 @@
 package com.bigsquare.ShadiPortal.serviceImpl;
 
+import com.bigsquare.ShadiPortal.dto.FamilySummaryDto;
 import com.bigsquare.ShadiPortal.entities.Family;
 import com.bigsquare.ShadiPortal.entities.Guest;
 import com.bigsquare.ShadiPortal.repositories.FamilyRepo;
+import com.bigsquare.ShadiPortal.repositories.GuestRepo;
 import com.bigsquare.ShadiPortal.services.FamilyService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,9 @@ public class FamilyServiceImpl implements FamilyService {
 
     @Autowired
     private FamilyRepo familyRepo;
+
+    @Autowired
+    private GuestRepo guestRepo;
 
     @Override
     public Family createFamily(Family family) {
@@ -102,6 +107,24 @@ public class FamilyServiceImpl implements FamilyService {
                 searchValue,
                 pageable);
 
+    }
+
+    @Override
+    public FamilySummaryDto getFamilySummary() {
+
+        Long totalFamilies = familyRepo.count();
+
+        Long totalFamilyMembers =
+                familyRepo.getTotalFamilyMembers();
+
+        Integer largestFamilySize =
+                familyRepo.getLargestFamilySize();
+
+        return new FamilySummaryDto(
+                totalFamilies,
+                totalFamilyMembers,
+                largestFamilySize
+        );
     }
 }
 
