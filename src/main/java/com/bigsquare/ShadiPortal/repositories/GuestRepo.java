@@ -163,4 +163,8 @@ public interface GuestRepo extends JpaRepository<Guest, Integer> {
             """)
     Long countGuestsHavingFamily();
 
+    Page<Guest> findAllByOrderByIdDesc(
+            Pageable pageable
+    );
+
 }
