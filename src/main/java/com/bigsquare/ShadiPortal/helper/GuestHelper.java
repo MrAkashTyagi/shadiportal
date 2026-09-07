@@ -30,7 +30,8 @@ public class GuestHelper {
             "gift",
             "cash",
             "stay",
-            "family"
+            "family",
+            "invitationSent"
     };
 
     public static String SHEET_NAME = "GUESTS_DETAILS";
@@ -72,6 +73,7 @@ public class GuestHelper {
                 dataRow.createCell(11).setCellValue(guest.getCash() != null ? guest.getCash() : "");
                 dataRow.createCell(12).setCellValue(guest.getStay() != null ? guest.getStay() : "");
                 dataRow.createCell(13).setCellValue(guest.getFamily() != null ? guest.getFamily().getFamilyName() : "");
+                dataRow.createCell(14).setCellValue(guest.getInvitationSent() != null ? guest.getInvitationSent() : false);
             }
             workbook.write(out);
             return new ByteArrayInputStream(out.toByteArray());
