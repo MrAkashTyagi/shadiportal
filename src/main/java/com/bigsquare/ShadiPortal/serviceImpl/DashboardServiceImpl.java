@@ -53,16 +53,30 @@ public class DashboardServiceImpl implements DashboardService {
         Double totalExpense =
                 expenseRepo.getTotalExpenseAmount();
 
+        Double totalPaidExpense =
+                expenseRepo.getTotalPaidExpenseAmount();
+
+        Double totalPendingExpense =
+                totalExpense - totalPaidExpense;
+
         return new DashboardSummaryDto(
+
                 totalGuests,
                 totalFamilies,
                 totalFamilyMembers,
+
                 averageFamilySize,
+
                 totalExpense,
+                totalPaidExpense,
+                totalPendingExpense,
+
                 stayRequired,
                 invitationSent,
                 pendingInvitations
+
         );
+
     }
 
     @Override
