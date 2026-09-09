@@ -26,10 +26,14 @@ public class Expense {
     private String expenseName;
     private String category;
     private String description;
-    private BigDecimal amount;
+//    private BigDecimal amount;
     private String billPath;
     private LocalDate expenseDate;
     private String paidBy;
+
+    private Double totalAmount;
+
+    private Double paidAmount;
 
 
 }
