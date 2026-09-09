@@ -25,6 +25,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ExpenseServiceImpl implements ExpenseService {
@@ -38,6 +40,18 @@ public class ExpenseServiceImpl implements ExpenseService {
             Expense expense,
             MultipartFile bill
     ) {
+
+        if (
+                expense.getPaidAmount() != null &&
+                        expense.getTotalAmount() != null &&
+                        expense.getPaidAmount().compareTo(
+                                expense.getTotalAmount()
+                        ) > 0
+        ) {
+            throw new RuntimeException(
+                    "Paid Amount cannot be greater than Total Amount"
+            );
+        }
 
         try {
 
@@ -61,6 +75,7 @@ public class ExpenseServiceImpl implements ExpenseService {
                 );
             }
 
+
             return expenseRepo.save(expense);
 
         } catch (IOException e) {
@@ -72,6 +87,18 @@ public class ExpenseServiceImpl implements ExpenseService {
 
     @Override
     public Expense updateExpense(Integer id, Expense expense, MultipartFile bill) {
+
+        if (
+                expense.getPaidAmount() != null &&
+                        expense.getTotalAmount() != null &&
+                        expense.getPaidAmount().compareTo(
+                                expense.getTotalAmount()
+                        ) > 0
+        ) {
+            throw new RuntimeException(
+                    "Paid Amount cannot be greater than Total Amount"
+            );
+        }
 
         Expense existingExpense =
                 expenseRepo.findById(id)
@@ -92,8 +119,12 @@ public class ExpenseServiceImpl implements ExpenseService {
                 expense.getDescription()
         );
 
-        existingExpense.setAmount(
-                expense.getAmount()
+        existingExpense.setTotalAmount(
+                expense.getTotalAmount()
+        );
+
+        existingExpense.setPaidAmount(
+                expense.getPaidAmount()
         );
 
         existingExpense.setPaidBy(
@@ -237,6 +268,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 
         expenseRepo.delete(expense);
     }
+
     @Override
     public byte[] exportExpenses() {
 
@@ -264,12 +296,18 @@ public class ExpenseServiceImpl implements ExpenseService {
                     .setCellValue("Description");
 
             header.createCell(3)
-                    .setCellValue("Amount");
+                    .setCellValue("Total Amount");
 
             header.createCell(4)
-                    .setCellValue("Expense Date");
+                    .setCellValue("Paid Amount");
 
             header.createCell(5)
+                    .setCellValue("Pending Amount");
+
+            header.createCell(6)
+                    .setCellValue("Expense Date");
+
+            header.createCell(7)
                     .setCellValue("Paid By");
 
             int rowNum = 1;
@@ -290,19 +328,35 @@ public class ExpenseServiceImpl implements ExpenseService {
 
                 row.createCell(3)
                         .setCellValue(
-                                expense.getAmount() != null
-                                        ? expense.getAmount().doubleValue()
+                                expense.getTotalAmount() != null
+                                        ? expense.getTotalAmount().doubleValue()
                                         : 0
                         );
 
                 row.createCell(4)
+                        .setCellValue(
+                                expense.getPaidAmount() != null
+                                        ? expense.getPaidAmount().doubleValue()
+                                        : 0
+                        );
+
+                row.createCell(5)
+                        .setCellValue(
+                                expense.getTotalAmount() != null
+                                        && expense.getPaidAmount() != null
+                                        ? expense.getTotalAmount()
+                                          - expense.getPaidAmount()
+                                        : 0
+                        );
+
+                row.createCell(6)
                         .setCellValue(
                                 expense.getExpenseDate() != null
                                         ? expense.getExpenseDate().toString()
                                         : ""
                         );
 
-                row.createCell(5)
+                row.createCell(7)
                         .setCellValue(expense.getPaidBy());
             }
 
@@ -323,25 +377,53 @@ public class ExpenseServiceImpl implements ExpenseService {
 
         List<Expense> expenses = expenseRepo.findAll();
 
-        BigDecimal totalExpense = expenses.stream()
-                .map(Expense::getAmount)
+        Double totalExpense = expenses.stream()
+                .map(Expense::getTotalAmount)
                 .filter(java.util.Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(0.0, Double::sum);
+
+        Double totalPaidExpense = expenses.stream()
+                .map(Expense::getPaidAmount)
+                .filter(java.util.Objects::nonNull)
+                .reduce(0.0, Double::sum);
+
+        Double totalPendingExpense =
+                totalExpense - totalPaidExpense;
 
         Long totalExpenses = (long) expenses.size();
 
-        BigDecimal highestExpense = expenses.stream()
-                .map(Expense::getAmount)
+        Double highestExpense = expenses.stream()
+                .map(Expense::getTotalAmount)
                 .filter(java.util.Objects::nonNull)
-                .max(BigDecimal::compareTo)
-                .orElse(BigDecimal.ZERO);
+                .max(Double::compareTo)
+                .orElse(0.0);
+
+//        String topCategory = expenses.stream()
+//                .filter(e -> e.getCategory() != null)
+//                .collect(
+//                        java.util.stream.Collectors.groupingBy(
+//                                Expense::getCategory,
+//                                java.util.stream.Collectors.counting()
+//                        )
+//                )
+//                .entrySet()
+//                .stream()
+//                .max(java.util.Map.Entry.comparingByValue())
+//                .map(java.util.Map.Entry::getKey)
+//                .orElse("-");
 
         String topCategory = expenses.stream()
-                .filter(e -> e.getCategory() != null)
+                .filter(expense ->
+                        expense.getCategory() != null &&
+                                !expense.getCategory().isBlank() &&
+                                expense.getTotalAmount() != null
+                )
                 .collect(
                         java.util.stream.Collectors.groupingBy(
                                 Expense::getCategory,
-                                java.util.stream.Collectors.counting()
+                                java.util.stream.Collectors.summingDouble(
+                                        Expense::getTotalAmount
+                                )
                         )
                 )
                 .entrySet()
@@ -352,15 +434,35 @@ public class ExpenseServiceImpl implements ExpenseService {
 
         return new ExpenseSummaryDto(
                 totalExpense,
+                totalPaidExpense,
+                totalPendingExpense,
                 totalExpenses,
                 highestExpense,
                 topCategory
         );
     }
+//
+//    @Override
+//    public List<ExpenseCategorySummaryDto>
+//    getExpenseCategorySummary() {
+//
+//        return expenseRepo
+//                .getCategoryWiseExpense()
+//                .stream()
+//                .map(row -> new ExpenseCategorySummaryDto(
+//
+//                        String.valueOf(row[0]),
+//
+//                        row[1] != null
+//                                ? (BigDecimal) row[1]
+//                                : BigDecimal.ZERO
+//
+//                ))
+//                .toList();
+//    }
 
     @Override
-    public List<ExpenseCategorySummaryDto>
-    getExpenseCategorySummary() {
+    public List<ExpenseCategorySummaryDto> getExpenseCategorySummary() {
 
         return expenseRepo
                 .getCategoryWiseExpense()
@@ -370,11 +472,14 @@ public class ExpenseServiceImpl implements ExpenseService {
                         String.valueOf(row[0]),
 
                         row[1] != null
-                                ? (BigDecimal) row[1]
+                                ? BigDecimal.valueOf(
+                                ((Number) row[1]).doubleValue()
+                        )
                                 : BigDecimal.ZERO
 
                 ))
                 .toList();
     }
+
 
 }
