@@ -34,20 +34,45 @@ public interface ExpenseRepo extends JpaRepository<Expense, Integer> {
             Pageable pageable
     );
 
+//    @Query("""
+//            SELECT e.category,
+//                   SUM(e.amount)
+//            FROM Expense e
+//            GROUP BY e.category
+//            """)
+//    List<Object[]> getCategoryWiseExpense();
+
+
     @Query("""
-            SELECT e.category,
-                   SUM(e.amount)
-            FROM Expense e
-            GROUP BY e.category
-            """)
+       SELECT e.category,
+              SUM(e.totalAmount)
+       FROM Expense e
+       WHERE e.category IS NOT NULL
+       GROUP BY e.category
+       """)
     List<Object[]> getCategoryWiseExpense();
 
+//    @Query("""
+//            SELECT COALESCE(SUM(e.amount),0)
+//            FROM Expense e
+//            """)
+//    Double getTotalExpenseAmount();
+//
+//    Page<Expense> findAllByOrderByIdDesc(
+//            Pageable pageable
+//    );
 
     @Query("""
-            SELECT COALESCE(SUM(e.amount),0)
-            FROM Expense e
-            """)
+        SELECT COALESCE(SUM(e.totalAmount),0)
+        FROM Expense e
+        """)
     Double getTotalExpenseAmount();
+
+    @Query("""
+        SELECT COALESCE(SUM(e.paidAmount),0)
+        FROM Expense e
+        """)
+    Double getTotalPaidExpenseAmount();
 
     Page<Expense> findAllByOrderByIdDesc(
             Pageable pageable
