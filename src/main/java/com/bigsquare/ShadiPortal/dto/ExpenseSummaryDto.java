@@ -11,9 +11,16 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class ExpenseSummaryDto {
 
-    private BigDecimal totalExpense;
+    private Double totalExpense;
+
+    private Double totalPaidExpense;
+
+    private Double totalPendingExpense;
+
     private Long totalExpenses;
-    private BigDecimal highestExpense;
+
+    private Double highestExpense;
+
     private String topCategory;
 
 }
