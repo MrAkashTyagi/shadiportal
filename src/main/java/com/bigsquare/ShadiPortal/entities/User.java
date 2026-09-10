@@ -5,17 +5,21 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "user")
+@NoArgsConstructor
+//@AllArgsConstructor
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
     @NotBlank(message = "Name field is required !!")
     @Size(min = 2, max = 20, message = "mimn 2 and max 20 chachters are allowed !!")
     private String name;
@@ -27,20 +31,16 @@ public class User {
     private String image;
     private boolean enabled;
 
-    public User(int id, String name, String role, String email, String password, String about, String image, boolean enabled) {
-        this.id = id;
-        this.name = name;
-        this.role = role;
-        this.email = email;
-        this.password = password;
-        this.about = about;
-        this.image = image;
-        this.enabled = enabled;
-    }
-
-    public User() {
-
-    }
+//    public User(Integer id, String name, String role, String email, String password, String about, String image, boolean enabled) {
+//        this.id = id;
+//        this.name = name;
+//        this.role = role;
+//        this.email = email;
+//        this.password = password;
+//        this.about = about;
+//        this.image = image;
+//        this.enabled = enabled;
+//    }
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
     List<Guest> guests = new ArrayList<>();
@@ -53,11 +53,11 @@ public class User {
         this.enabled = enabled;
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
