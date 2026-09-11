@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface GuestRepo extends JpaRepository<Guest, Integer> {
@@ -24,7 +25,9 @@ public interface GuestRepo extends JpaRepository<Guest, Integer> {
             SELECT g
             FROM Guest g
             WHERE
-                (
+                        g.user.id = :userId
+                                    
+                AND (
                     :search = ''
                     OR LOWER(g.name) LIKE LOWER(CONCAT('%', :search, '%'))
                     OR CAST(g.id AS string) LIKE CONCAT('%', :search, '%')
@@ -77,6 +80,7 @@ public interface GuestRepo extends JpaRepository<Guest, Integer> {
                                )
             """)
     Page<Guest> findGuestsWithFilters(
+            @Param("userId") Integer userId,
             @Param("search") String search,
             @Param("gender") String gender,
             @Param("adultOrchild") String adultOrchild,
@@ -165,6 +169,56 @@ public interface GuestRepo extends JpaRepository<Guest, Integer> {
 
     Page<Guest> findAllByOrderByIdDesc(
             Pageable pageable
+    );
+
+    Optional<Guest> findByIdAndUserId(
+            Integer guestId,
+            Integer userId
+    );
+
+    List<Guest> findAllByUserId(
+            Integer userId
+    );
+
+    long countByUserId(
+            Integer userId
+    );
+
+//    long countByUserIdAndInvitationSentTrue(
+//            Integer userId
+//    );
+
+    long countByUserIdAndStayIgnoreCase(
+            Integer userId,
+            String stay
+    );
+
+    Page<Guest> findAllByUserId(
+            Integer userId,
+            Pageable pageable
+    );
+
+    List<Guest> findByUserId(
+            Integer userId
+    );
+
+    Long countByUserIdAndInvitationSentTrue(
+            Integer userId
+    );
+
+    @Query("""
+       SELECT COUNT(g)
+       FROM Guest g
+       WHERE g.user.id = :userId
+       AND g.invitationSent = false
+       """)
+    Long countPendingInvitationsByUserId(
+            @Param("userId") Integer userId
+    );
+
+    Long countByUserIdAndStay(
+            Integer userId,
+            String stay
     );
 
 }
