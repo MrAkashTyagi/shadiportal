@@ -29,12 +29,15 @@ public class FamilyDataDumpController {
     private FamilyDataDumpServiceImpl familyDataDumpService;
 
     @PostMapping("/upload")
-    public ResponseEntity<?> upload(@RequestParam("file") MultipartFile file){
+    public ResponseEntity<?> upload(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam Integer userId
+    ){
 
         if (FamilyHelper.checkExcelFormat(file)){
 
             //upload
-            this.familyDataDumpService.save(file);
+            this.familyDataDumpService.save(file, userId);
             return ResponseEntity.ok(Map.of("message", "File is uploaded successfully !! Data is saved to db !!"));
 
         }else {
