@@ -1,5 +1,6 @@
 package com.bigsquare.ShadiPortal.controllers;
 
+import com.bigsquare.ShadiPortal.dto.FamilyRequest;
 import com.bigsquare.ShadiPortal.dto.FamilySummaryDto;
 import com.bigsquare.ShadiPortal.entities.Family;
 import com.bigsquare.ShadiPortal.services.FamilyService;
@@ -19,19 +20,37 @@ public class FamilyController {
     private FamilyService familyService;
 
     //    create
+//    @PostMapping
+//    public Family createFamily(@RequestBody Family family) {
+//        return this.familyService.createFamily(family);
+//    }
+
     @PostMapping
-    public Family createFamily(@RequestBody Family family) {
-        return this.familyService.createFamily(family);
+    public Family createFamily(
+            @RequestBody FamilyRequest request
+    ) {
+        return familyService.createFamily(request);
     }
 
     //    getAll
     @GetMapping
-    public Page<Family> getAllFamilies(
+    public Page<Family> getFamilies(
+
+            @RequestParam Integer userId,
+
             @RequestParam(defaultValue = "0") int page,
+
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false, defaultValue = "") String search
+
+            @RequestParam(defaultValue = "") String search
     ) {
-        return this.familyService.getPaginatedFamilyResult(page, size, search);
+
+        return familyService.getPaginatedFamilyResult(
+                userId,
+                page,
+                size,
+                search
+        );
     }
 
     //    get by id
@@ -41,11 +60,19 @@ public class FamilyController {
     }
 
     //    updated
+//    @PutMapping("/{id}")
+//    public Family updateFamily(@PathVariable Integer id, @RequestBody Family family) {
+//
+//        return this.familyService.updateFamily(id, family);
+//
+//    }
+
     @PutMapping("/{id}")
-    public Family updateFamily(@PathVariable Integer id, @RequestBody Family family) {
-
-        return this.familyService.updateFamily(id, family);
-
+    public Family updateFamily(
+            @PathVariable Integer id,
+            @RequestBody FamilyRequest request
+    ) {
+        return familyService.updateFamily(id, request);
     }
 
     //    delete
