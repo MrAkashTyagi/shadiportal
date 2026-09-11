@@ -1,9 +1,7 @@
 package com.bigsquare.ShadiPortal.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -34,6 +32,16 @@ public class Expense {
     private Double totalAmount;
 
     private Double paidAmount;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    @JsonIgnoreProperties({
+            "password",
+            "guests",
+            "families",
+            "expenses"
+    })
+    private User user;
 
 
 }
