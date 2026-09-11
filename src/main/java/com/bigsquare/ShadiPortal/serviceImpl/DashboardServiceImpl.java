@@ -27,34 +27,58 @@ public class DashboardServiceImpl implements DashboardService {
     private ExpenseRepo expenseRepo;
 
     @Override
-    public DashboardSummaryDto getDashboardSummary() {
+    public DashboardSummaryDto getDashboardSummary(
+            Integer userId
+    ) {
 
-        Long totalGuests = guestRepo.count();
+        Long totalGuests =
+                guestRepo.countByUserId(userId);
 
-        Long totalFamilies = familyRepo.count();
+        Long totalFamilies =
+                familyRepo.countByUserId(userId);
 
         Long totalFamilyMembers =
-                familyRepo.getTotalFamilyMembers();
+                familyRepo.getTotalFamilyMembersByUserId(
+                        userId
+                );
 
         Double averageFamilySize =
                 totalFamilies > 0
                         ? (double) totalFamilyMembers / totalFamilies
                         : 0.0;
 
+//        Long invitationSent =
+//                guestRepo.countByInvitationSentTrue();
+
         Long invitationSent =
-                guestRepo.countByInvitationSentTrue();
+                guestRepo.countByUserIdAndInvitationSentTrue(
+                        userId
+                );
+
+
+//        Long pendingInvitations =
+//                guestRepo.countPendingInvitationsByUserId(userId);
 
         Long pendingInvitations =
-                guestRepo.countPendingInvitations();
+                totalGuests - invitationSent;
 
         Long stayRequired =
-                guestRepo.countByStay("Yes");
+                guestRepo.countByUserIdAndStay(
+                        userId,
+                        "Yes"
+                );
 
         Double totalExpense =
-                expenseRepo.getTotalExpenseAmount();
+                expenseRepo
+                        .getTotalExpenseAmountByUserId(
+                                userId
+                        );
 
         Double totalPaidExpense =
-                expenseRepo.getTotalPaidExpenseAmount();
+                expenseRepo
+                        .getTotalPaidExpenseAmountByUserId(
+                                userId
+                        );
 
         Double totalPendingExpense =
                 totalExpense - totalPaidExpense;
