@@ -93,48 +93,78 @@ public interface GuestRepo extends JpaRepository<Guest, Integer> {
     );
 
     @Query("""
-                SELECT g
-                FROM Guest g
-                WHERE
-                    (
-                        :search = ''
-                        OR LOWER(g.name) LIKE LOWER(CONCAT('%', :search, '%'))
-                        OR CAST(g.id AS string) LIKE CONCAT('%', :search, '%')
-                    )
+        SELECT g
+        FROM Guest g
+        WHERE
+            g.user.id = :userId
+
+            AND (
+                :search = ''
+                OR LOWER(g.name)
+                    LIKE LOWER(CONCAT('%', :search, '%'))
+                OR CAST(g.id AS string)
+                    LIKE CONCAT('%', :search, '%')
+            )
+
+            AND (
+                :gender = ''
+                OR LOWER(g.gender) = LOWER(:gender)
+            )
+
+            AND (
+                :adultOrchild = ''
+                OR LOWER(g.adultOrchild) = LOWER(:adultOrchild)
+            )
+
+            AND (
+                :guestCategory = ''
+                OR LOWER(g.guestCategory) = LOWER(:guestCategory)
+            )
+
+            AND (
+                :gift = ''
+                OR LOWER(g.gift) = LOWER(:gift)
+            )
+
+            AND (
+                :stay = ''
+                OR LOWER(g.stay) = LOWER(:stay)
+            )
+
+            AND (
+                :cash = ''
+                OR LOWER(g.cash) = LOWER(:cash)
+            )
+
+            AND (
+                :invitationSent IS NULL
+
+                OR (
+                    :invitationSent = true
+                    AND g.invitationSent = true
+                )
+
+                OR (
+                    :invitationSent = false
                     AND (
-                        :gender = ''
-                        OR LOWER(g.gender) = LOWER(:gender)
+                        g.invitationSent = false
+                        OR g.invitationSent IS NULL
                     )
-                    AND (
-                        :adultOrchild = ''
-                        OR LOWER(g.adultOrchild) = LOWER(:adultOrchild)
-                    )
-                    AND (
-                        :guestCategory = ''
-                        OR LOWER(g.guestCategory) = LOWER(:guestCategory)
-                    )
-                    AND (
-                        :gift = ''
-                        OR LOWER(g.gift) = LOWER(:gift)
-                    )
-                    AND (
-                        :stay = ''
-                        OR LOWER(g.stay) = LOWER(:stay)
-                    )
-                    AND (
-                        :cash = ''
-                        OR LOWER(g.cash) = LOWER(:cash)
-                    )
-                ORDER BY g.id ASC
-            """)
+                )
+            )
+
+        ORDER BY g.id ASC
+        """)
     List<Guest> findAllGuestsWithFilters(
+            @Param("userId") Integer userId,
             @Param("search") String search,
             @Param("gender") String gender,
             @Param("adultOrchild") String adultOrchild,
             @Param("guestCategory") String guestCategory,
             @Param("gift") String gift,
             @Param("stay") String stay,
-            @Param("cash") String cash
+            @Param("cash") String cash,
+            @Param("invitationSent") Boolean invitationSent
     );
 
     long countByInvitationSentTrue();
