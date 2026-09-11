@@ -68,7 +68,15 @@ public class GuestHelper {
                     dataRow.createCell(8).setCellValue("");
                 }
 
-                dataRow.createCell(9).setCellValue("");
+//                dataRow.createCell(9).setCellValue("");
+
+                dataRow.createCell(9)
+                        .setCellValue(
+                                guest.getUser() != null &&
+                                        guest.getUser().getId() != null
+                                        ? guest.getUser().getId()
+                                        : 0
+                        );
                 dataRow.createCell(10).setCellValue(guest.getGift() != null ? guest.getGift() : "");
                 dataRow.createCell(11).setCellValue(guest.getCash() != null ? guest.getCash() : "");
                 dataRow.createCell(12).setCellValue(guest.getStay() != null ? guest.getStay() : "");
@@ -96,91 +104,370 @@ public class GuestHelper {
     }
 
     // CONVERT EXCEL TO LIST OF GUESTS (100% PRO COMPILER COMPATIBLE VALUE SEQUENCE)
-    public static List<Guest> convertExcelToListOfGuests(InputStream is) {
-        List<Guest> guests = new ArrayList<>();
-        DataFormatter dataFormatter = new DataFormatter();
+//    public static List<Guest> convertExcelToListOfGuests(InputStream is) {
+//        List<Guest> guests = new ArrayList<>();
+//        DataFormatter dataFormatter = new DataFormatter();
+//
+//        try (XSSFWorkbook workbook = new XSSFWorkbook(is)) {
+//            Sheet sheet = workbook.getSheetAt(0);
+//            int totalRows = sheet.getPhysicalNumberOfRows();
+//
+//            // FIX FIXED: Loop standard structure restored without typo texts interruptions
+//            for (int i = 1; i < totalRows; i++) {
+//                Row row = sheet.getRow(i);
+//                if (row == null) continue;
+//
+//                Guest guest = new Guest();
+//                guest.setId(null);
+//
+//                // Index 1: email
+//                Cell cell1 = row.getCell(0);
+//                guest.setEmail(dataFormatter.formatCellValue(cell1));
+//
+//                // Index 2: name
+//                Cell cell2 = row.getCell(1);
+//                guest.setName(dataFormatter.formatCellValue(cell2));
+//
+//                // Index 3: gender
+//                Cell cell3 = row.getCell(2);
+//                guest.setGender(dataFormatter.formatCellValue(cell3));
+//
+//                // Index 4: guestCategory
+//                Cell cell4 = row.getCell(3);
+//                guest.setGuestCategory(dataFormatter.formatCellValue(cell4));
+//
+//                // Index 5: adultOrChild ("Ad" mapped to "Adult", "Ch" mapped to "Child")
+//                Cell cell5 = row.getCell(4);
+//                String type = dataFormatter.formatCellValue(cell5).trim();
+//                if (type.equalsIgnoreCase("Ad")) {
+//                    guest.setAdultOrchild("Adult");
+//                } else if (type.equalsIgnoreCase("Ch")) {
+//                    guest.setAdultOrchild("Child");
+//                } else {
+//                    guest.setAdultOrchild(type.isEmpty() ? "Adult" : type);
+//                }
+//
+//                // Index 6: phoneNumber
+//                Cell cell6 = row.getCell(5);
+//                guest.setPhoneNumber(dataFormatter.formatCellValue(cell6));
+//
+//                // Index 7: whatsapp_Number
+//                Cell cell7 = row.getCell(6);
+//                String whatsapp = dataFormatter.formatCellValue(cell7).trim();
+//                guest.setWhatsapp_Number(whatsapp.isEmpty() ? guest.getPhoneNumber() : whatsapp);
+//
+//                // Index 8: familyId relational foreign key configuration binding
+//                Cell cell8 = row.getCell(7);
+//                if (cell8 != null) {
+//                    try {
+//                        Integer familyIdPointer = null;
+//                        if (cell8.getCellType() == CellType.NUMERIC) {
+//                            familyIdPointer = (int) cell8.getNumericCellValue();
+//                        } else {
+//                            String rawIdText = dataFormatter.formatCellValue(cell8).trim();
+//                            if (!rawIdText.isEmpty()) {
+//                                familyIdPointer = Integer.parseInt(rawIdText);
+//                            }
+//                        }
+//
+//                        if (familyIdPointer != null) {
+//                            Family linkedFamilyEntity = new Family();
+//                            linkedFamilyEntity.setId(familyIdPointer);
+//                            guest.setFamily(linkedFamilyEntity);
+//                        }
+//                    } catch (Exception ex) {
+//                        System.err.println("Error mapping relational index " + i + ": " + ex.getMessage());
+//                    }
+//                }
+//
+//                // Index 9 (userId) processing elements omitted dynamically
+//
+//                if (guest.getName() != null && !guest.getName().trim().isEmpty()) {
+//                    guests.add(guest);
+//                }
+//            }
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//        return guests;
+//    }
 
-        try (XSSFWorkbook workbook = new XSSFWorkbook(is)) {
-            Sheet sheet = workbook.getSheetAt(0);
-            int totalRows = sheet.getPhysicalNumberOfRows();
+    private static String getCellValue(
+            Row row,
+            int cellIndex,
+            DataFormatter formatter
+    ) {
 
-            // FIX FIXED: Loop standard structure restored without typo texts interruptions
-            for (int i = 1; i < totalRows; i++) {
-                Row row = sheet.getRow(i);
-                if (row == null) continue;
+        Cell cell =
+                row.getCell(
+                        cellIndex,
+                        Row.MissingCellPolicy.RETURN_BLANK_AS_NULL
+                );
 
-                Guest guest = new Guest();
+        if (cell == null) {
+            return "";
+        }
+
+        return formatter
+                .formatCellValue(cell)
+                .trim();
+    }
+
+    private static Boolean getBooleanCellValue(
+            Row row,
+            int cellIndex,
+            DataFormatter formatter
+    ) {
+
+        String value =
+                getCellValue(
+                        row,
+                        cellIndex,
+                        formatter
+                );
+
+        if (value.isBlank()) {
+            return false;
+        }
+
+        return value.equalsIgnoreCase("true")
+                || value.equalsIgnoreCase("yes")
+                || value.equalsIgnoreCase("y")
+                || value.equalsIgnoreCase("1");
+    }
+
+    public static List<Guest> convertExcelToListOfGuests(
+            InputStream inputStream
+    ) {
+
+        List<Guest> guests =
+                new ArrayList<>();
+
+        DataFormatter formatter =
+                new DataFormatter();
+
+        try (
+                XSSFWorkbook workbook =
+                        new XSSFWorkbook(inputStream)
+        ) {
+
+            Sheet sheet =
+                    workbook.getSheetAt(0);
+
+            int lastRowNumber =
+                    sheet.getLastRowNum();
+
+            for (
+                    int rowIndex = 1;
+                    rowIndex <= lastRowNumber;
+                    rowIndex++
+            ) {
+
+                Row row =
+                        sheet.getRow(rowIndex);
+
+                if (row == null) {
+                    continue;
+                }
+
+                String email =
+                        getCellValue(
+                                row,
+                                1,
+                                formatter
+                        );
+
+                String name =
+                        getCellValue(
+                                row,
+                                2,
+                                formatter
+                        );
+
+                /*
+                 * Completely empty row ko ignore karo.
+                 */
+                if (
+                        name.isBlank() &&
+                                email.isBlank()
+                ) {
+                    continue;
+                }
+
+                Guest guest =
+                        new Guest();
+
+                /*
+                 * Excel guest_id ignore hoga.
+                 * Database fresh ID generate karega.
+                 */
                 guest.setId(null);
 
-                // Index 1: email
-                Cell cell1 = row.getCell(0);
-                guest.setEmail(dataFormatter.formatCellValue(cell1));
+                guest.setEmail(
+                        email
+                );
 
-                // Index 2: name
-                Cell cell2 = row.getCell(1);
-                guest.setName(dataFormatter.formatCellValue(cell2));
+                guest.setName(
+                        name
+                );
 
-                // Index 3: gender
-                Cell cell3 = row.getCell(2);
-                guest.setGender(dataFormatter.formatCellValue(cell3));
+                guest.setGender(
+                        getCellValue(
+                                row,
+                                3,
+                                formatter
+                        )
+                );
 
-                // Index 4: guestCategory
-                Cell cell4 = row.getCell(3);
-                guest.setGuestCategory(dataFormatter.formatCellValue(cell4));
+                guest.setGuestCategory(
+                        getCellValue(
+                                row,
+                                4,
+                                formatter
+                        )
+                );
 
-                // Index 5: adultOrChild ("Ad" mapped to "Adult", "Ch" mapped to "Child")
-                Cell cell5 = row.getCell(4);
-                String type = dataFormatter.formatCellValue(cell5).trim();
-                if (type.equalsIgnoreCase("Ad")) {
-                    guest.setAdultOrchild("Adult");
-                } else if (type.equalsIgnoreCase("Ch")) {
-                    guest.setAdultOrchild("Child");
+                String adultOrChild =
+                        getCellValue(
+                                row,
+                                5,
+                                formatter
+                        );
+
+                if (
+                        adultOrChild.equalsIgnoreCase(
+                                "Ad"
+                        )
+                ) {
+
+                    guest.setAdultOrchild(
+                            "Adult"
+                    );
+
+                } else if (
+                        adultOrChild.equalsIgnoreCase(
+                                "Ch"
+                        )
+                ) {
+
+                    guest.setAdultOrchild(
+                            "Child"
+                    );
+
                 } else {
-                    guest.setAdultOrchild(type.isEmpty() ? "Adult" : type);
+
+                    guest.setAdultOrchild(
+                            adultOrChild.isBlank()
+                                    ? "Adult"
+                                    : adultOrChild
+                    );
                 }
 
-                // Index 6: phoneNumber
-                Cell cell6 = row.getCell(5);
-                guest.setPhoneNumber(dataFormatter.formatCellValue(cell6));
+                guest.setPhoneNumber(
+                        getCellValue(
+                                row,
+                                6,
+                                formatter
+                        )
+                );
 
-                // Index 7: whatsapp_Number
-                Cell cell7 = row.getCell(6);
-                String whatsapp = dataFormatter.formatCellValue(cell7).trim();
-                guest.setWhatsapp_Number(whatsapp.isEmpty() ? guest.getPhoneNumber() : whatsapp);
+                String whatsappNumber =
+                        getCellValue(
+                                row,
+                                7,
+                                formatter
+                        );
 
-                // Index 8: familyId relational foreign key configuration binding
-                Cell cell8 = row.getCell(7);
-                if (cell8 != null) {
-                    try {
-                        Integer familyIdPointer = null;
-                        if (cell8.getCellType() == CellType.NUMERIC) {
-                            familyIdPointer = (int) cell8.getNumericCellValue();
-                        } else {
-                            String rawIdText = dataFormatter.formatCellValue(cell8).trim();
-                            if (!rawIdText.isEmpty()) {
-                                familyIdPointer = Integer.parseInt(rawIdText);
-                            }
-                        }
+                guest.setWhatsapp_Number(
+                        whatsappNumber.isBlank()
+                                ? guest.getPhoneNumber()
+                                : whatsappNumber
+                );
 
-                        if (familyIdPointer != null) {
-                            Family linkedFamilyEntity = new Family();
-                            linkedFamilyEntity.setId(familyIdPointer);
-                            guest.setFamily(linkedFamilyEntity);
-                        }
-                    } catch (Exception ex) {
-                        System.err.println("Error mapping relational index " + i + ": " + ex.getMessage());
-                    }
+                /*
+                 * Index 8: familyId
+                 * Ignore karna hai.
+                 */
+
+                /*
+                 * Index 9: userId
+                 * Ignore karna hai.
+                 * Current user service layer me set hoga.
+                 */
+
+                guest.setGift(
+                        getCellValue(
+                                row,
+                                10,
+                                formatter
+                        )
+                );
+
+                guest.setCash(
+                        getCellValue(
+                                row,
+                                11,
+                                formatter
+                        )
+                );
+
+                guest.setStay(
+                        getCellValue(
+                                row,
+                                12,
+                                formatter
+                        )
+                );
+
+                /*
+                 * Family ko ID se nahi, name se map karenge.
+                 */
+                String familyName =
+                        getCellValue(
+                                row,
+                                13,
+                                formatter
+                        );
+
+                if (!familyName.isBlank()) {
+
+                    Family family =
+                            new Family();
+
+                    family.setFamilyName(
+                            familyName.trim()
+                    );
+
+                    /*
+                     * Service layer is Family name ko current user ke
+                     * scope me existing Family se replace karegi.
+                     */
+                    guest.setFamily(
+                            family
+                    );
                 }
 
-                // Index 9 (userId) processing elements omitted dynamically
+                guest.setInvitationSent(
+                        getBooleanCellValue(
+                                row,
+                                14,
+                                formatter
+                        )
+                );
 
-                if (guest.getName() != null && !guest.getName().trim().isEmpty()) {
-                    guests.add(guest);
-                }
+                guests.add(
+                        guest
+                );
             }
 
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException exception) {
+
+            throw new RuntimeException(
+                    "Unable to read guest Excel file",
+                    exception
+            );
         }
 
         return guests;
