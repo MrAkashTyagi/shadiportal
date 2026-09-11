@@ -3,7 +3,9 @@ package com.bigsquare.ShadiPortal.serviceImpl;
 import com.bigsquare.ShadiPortal.dto.ExpenseCategorySummaryDto;
 import com.bigsquare.ShadiPortal.dto.ExpenseSummaryDto;
 import com.bigsquare.ShadiPortal.entities.Expense;
+import com.bigsquare.ShadiPortal.entities.User;
 import com.bigsquare.ShadiPortal.repositories.ExpenseRepo;
+import com.bigsquare.ShadiPortal.repositories.UserRepo;
 import com.bigsquare.ShadiPortal.services.ExpenseService;
 import jakarta.persistence.EntityNotFoundException;
 import org.apache.poi.ss.usermodel.Row;
@@ -34,12 +36,84 @@ public class ExpenseServiceImpl implements ExpenseService {
     @Autowired
     private ExpenseRepo expenseRepo;
 
+    @Autowired
+    private UserRepo userRepo;
+
+
+//    @Override
+//    public Expense createExpense(
+//            Expense expense,
+//            MultipartFile bill
+//    ) {
+//
+//        if (
+//                expense.getPaidAmount() != null &&
+//                        expense.getTotalAmount() != null &&
+//                        expense.getPaidAmount().compareTo(
+//                                expense.getTotalAmount()
+//                        ) > 0
+//        ) {
+//            throw new RuntimeException(
+//                    "Paid Amount cannot be greater than Total Amount"
+//            );
+//        }
+//
+//        try {
+//
+//            if (bill != null && !bill.isEmpty()) {
+//
+//                String fileName =
+//                        bill.getOriginalFilename();
+//
+//                Path uploadPath =
+//                        Paths.get("uploads/bills");
+//
+//                Files.createDirectories(uploadPath);
+//
+//                Path filePath =
+//                        uploadPath.resolve(fileName);
+//
+//                bill.transferTo(filePath);
+//
+//                expense.setBillPath(
+//                        filePath.toString()
+//                );
+//            }
+//
+//
+//            return expenseRepo.save(expense);
+//
+//        } catch (IOException e) {
+//
+//            throw new RuntimeException("Error uploading bill", e);
+//
+//        }
+//    }
 
     @Override
     public Expense createExpense(
             Expense expense,
-            MultipartFile bill
+            MultipartFile bill,
+            Integer userId
     ) {
+
+        if (userId == null) {
+
+            throw new IllegalArgumentException(
+                    "User id is required"
+            );
+        }
+
+        User user =
+                userRepo.findById(userId)
+                        .orElseThrow(() ->
+                                new EntityNotFoundException(
+                                        "User not found with id: "
+                                                + userId
+                                )
+                        );
+
+        expense.setUser(user);
 
         if (
                 expense.getPaidAmount() != null &&
@@ -48,7 +122,8 @@ public class ExpenseServiceImpl implements ExpenseService {
                                 expense.getTotalAmount()
                         ) > 0
         ) {
-            throw new RuntimeException(
+
+            throw new IllegalArgumentException(
                     "Paid Amount cannot be greater than Total Amount"
             );
         }
@@ -57,33 +132,55 @@ public class ExpenseServiceImpl implements ExpenseService {
 
             if (bill != null && !bill.isEmpty()) {
 
-                String fileName =
+                String originalFileName =
                         bill.getOriginalFilename();
 
-                Path uploadPath =
-                        Paths.get("uploads/bills");
+                String safeFileName =
+                        System.currentTimeMillis()
+                                + "_"
+                                + (
+                                originalFileName != null
+                                        ? originalFileName
+                                        : "bill"
+                        );
 
-                Files.createDirectories(uploadPath);
+                Path uploadPath =
+                        Paths.get(
+                                "uploads",
+                                "bills"
+                        );
+
+                Files.createDirectories(
+                        uploadPath
+                );
 
                 Path filePath =
-                        uploadPath.resolve(fileName);
+                        uploadPath.resolve(
+                                safeFileName
+                        );
 
-                bill.transferTo(filePath);
+                bill.transferTo(
+                        filePath
+                );
 
                 expense.setBillPath(
                         filePath.toString()
                 );
             }
 
+            return expenseRepo.save(
+                    expense
+            );
 
-            return expenseRepo.save(expense);
+        } catch (IOException exception) {
 
-        } catch (IOException e) {
-
-            throw new RuntimeException("Error uploading bill", e);
-
+            throw new RuntimeException(
+                    "Error uploading bill",
+                    exception
+            );
         }
     }
+
 
     @Override
     public Expense updateExpense(Integer id, Expense expense, MultipartFile bill) {
