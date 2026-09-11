@@ -200,6 +200,7 @@ public class ExpenseController {
     // Paginated Expenses
     @GetMapping
     public Page<Expense> getPaginatedExpenses(
+            @RequestParam Integer userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false, defaultValue = "") String search,
@@ -207,6 +208,7 @@ public class ExpenseController {
     ) {
 
         return expenseService.getPaginatedExpenses(
+                userId,
                 page,
                 size,
                 search,
@@ -260,8 +262,18 @@ public class ExpenseController {
     }
 
     @GetMapping("/summary")
-    public ExpenseSummaryDto getExpenseSummary() {
-        return expenseService.getExpenseSummary();
+    public ResponseEntity<ExpenseSummaryDto>
+    getExpenseSummary(
+
+            @RequestParam Integer userId
+
+    ) {
+
+        return ResponseEntity.ok(
+                expenseService.getExpenseSummary(
+                        userId
+                )
+        );
     }
 
     @GetMapping("/category-summary")
