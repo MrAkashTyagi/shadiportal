@@ -15,7 +15,12 @@ import org.springframework.stereotype.Service;
 public interface GuestService {
 
 
-    public Guest createGuest(Guest guest);
+//    public Guest createGuest(Guest guest);
+
+    Guest createGuest(
+            Guest guest,
+            Integer userId
+    );
 
     public List<Guest> getAllGuests();
 
@@ -26,7 +31,8 @@ public interface GuestService {
     public Guest updateGuest(Integer id, Guest guest);
 
 
-    Page<Guest> getGuestWithPagination(int page,
+    Page<Guest> getGuestWithPagination(Integer userId,
+                                       int page,
                                        int size,
                                        String search,
                                        String gender,
@@ -48,7 +54,7 @@ public interface GuestService {
             Boolean invitationSent
     ) throws IOException;
 
-    GuestSummaryDto getGuestSummary();
+    GuestSummaryDto getGuestSummary( Integer userId);
 
     List<GuestCategorySummaryDto> getGuestCategorySummary();
 }
