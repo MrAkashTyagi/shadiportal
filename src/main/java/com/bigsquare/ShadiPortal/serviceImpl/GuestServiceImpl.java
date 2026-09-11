@@ -4,9 +4,11 @@ import com.bigsquare.ShadiPortal.dto.GuestCategorySummaryDto;
 import com.bigsquare.ShadiPortal.dto.GuestSummaryDto;
 import com.bigsquare.ShadiPortal.entities.Family;
 import com.bigsquare.ShadiPortal.entities.Guest;
+import com.bigsquare.ShadiPortal.entities.User;
 import com.bigsquare.ShadiPortal.helper.GuestHelper;
 import com.bigsquare.ShadiPortal.repositories.FamilyRepo;
 import com.bigsquare.ShadiPortal.repositories.GuestRepo;
+import com.bigsquare.ShadiPortal.repositories.UserRepo;
 import com.bigsquare.ShadiPortal.services.GuestService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,23 +31,96 @@ public class GuestServiceImpl implements GuestService {
     private FamilyRepo familyRepo;
 
     @Autowired
+    private UserRepo userRepo;
+
+    @Autowired
     GuestRepo guestRepo;
 
-    public Guest saveGuest(Guest guest) {
-        if (guest.getFamily() != null && guest.getFamily().getFamilyName() != null) {
-            String inputFamilyName = guest.getFamily().getFamilyName().trim();
-            Optional<Family> existingFamily = familyRepo.findByFamilyNameIgnoreCase(inputFamilyName);
-            if (existingFamily.isPresent()) {
-                guest.setFamily(existingFamily.get());
-            } else {
-                guest.getFamily().setFamilyName(inputFamilyName);
-            }
+//    public Guest createGuest(Guest guest) {
+//        if (guest.getFamily() != null && guest.getFamily().getFamilyName() != null) {
+//            String inputFamilyName = guest.getFamily().getFamilyName().trim();
+//            Optional<Family> existingFamily = familyRepo.findByFamilyNameIgnoreCase(inputFamilyName);
+//            if (existingFamily.isPresent()) {
+//                guest.setFamily(existingFamily.get());
+//            } else {
+//                guest.getFamily().setFamilyName(inputFamilyName);
+//            }
+//
+//            // Family existingFamily = familyRepo.findById(guest.getFamily().getId()).orElseThrow(() -> new EntityNotFoundException("Family not found"));
+//            //guest.setFamily(existingFamily);
+//        }
+//
+//        return this.guestRepo.save(guest);
+//    }
 
-            // Family existingFamily = familyRepo.findById(guest.getFamily().getId()).orElseThrow(() -> new EntityNotFoundException("Family not found"));
-            //guest.setFamily(existingFamily);
+    @Override
+    public Guest createGuest(
+            Guest guest,
+            Integer userId
+    ) {
+
+        if (userId == null) {
+            throw new IllegalArgumentException(
+                    "User id is required"
+            );
         }
 
-        return this.guestRepo.save(guest);
+        User user = userRepo
+                .findById(userId)
+                .orElseThrow(() ->
+                        new EntityNotFoundException(
+                                "User not found with id: " + userId
+                        )
+                );
+
+        guest.setUser(user);
+
+        if (
+                guest.getFamily() != null &&
+                        guest.getFamily().getFamilyName() != null &&
+                        !guest.getFamily().getFamilyName().isBlank()
+        ) {
+
+            String inputFamilyName =
+                    guest.getFamily()
+                            .getFamilyName()
+                            .trim();
+
+            Optional<Family> existingFamily =
+                    familyRepo
+                            .findByFamilyNameIgnoreCaseAndUserId(
+                                    inputFamilyName,
+                                    userId
+                            );
+
+            if (existingFamily.isPresent()) {
+
+                guest.setFamily(
+                        existingFamily.get()
+                );
+
+            } else {
+
+                Family newFamily = new Family();
+
+                newFamily.setFamilyName(
+                        inputFamilyName
+                );
+
+                newFamily.setUser(user);
+
+                Family savedFamily =
+                        familyRepo.save(newFamily);
+
+                guest.setFamily(savedFamily);
+            }
+
+        } else {
+
+            guest.setFamily(null);
+        }
+
+        return guestRepo.save(guest);
     }
 
     public List<Guest> getAllGuests() {
@@ -118,7 +193,8 @@ public class GuestServiceImpl implements GuestService {
     }
 
     @Override
-    public Page<Guest> getGuestWithPagination(int page,
+    public Page<Guest> getGuestWithPagination(Integer userId,
+                                              int page,
                                               int size,
                                               String search,
                                               String gender,
@@ -157,6 +233,7 @@ public class GuestServiceImpl implements GuestService {
 //        return this.guestRepo.findBySearchQuery(search.trim(), pageable);
 
         return this.guestRepo.findGuestsWithFilters(
+                userId,
                 searchValue,
                 genderValue,
                 typeValue,
@@ -169,10 +246,10 @@ public class GuestServiceImpl implements GuestService {
         );
     }
 
-    @Override
-    public Guest createGuest(Guest guest) {
-        return this.guestRepo.save(guest);
-    }
+//    @Override
+//    public Guest createGuest(Guest guest) {
+//        return this.guestRepo.save(guest);
+//    }
 
     public ByteArrayInputStream getActualData() throws IOException {
         List<Guest> guestList = this.guestRepo.findAll();
@@ -228,20 +305,45 @@ public class GuestServiceImpl implements GuestService {
     }
 
     @Override
-    public GuestSummaryDto getGuestSummary() {
+    public GuestSummaryDto getGuestSummary(
+            Integer userId
+    ) {
 
         return new GuestSummaryDto(
-                guestRepo.count(),
-                guestRepo.countByInvitationSentTrue(),
-                guestRepo.countPendingInvitations(),
-                guestRepo.countByStay("Yes")
-        );
 
+                guestRepo.countByUserId(
+                        userId
+                ),
+
+                guestRepo.countByUserIdAndInvitationSentTrue(
+                        userId
+                ),
+
+                guestRepo.countPendingInvitationsByUserId(
+                        userId
+                ),
+
+                guestRepo.countByUserIdAndStay(
+                        userId,
+                        "Yes"
+                )
+
+        );
     }
 
     @Override
     public List<GuestCategorySummaryDto> getGuestCategorySummary() {
         return guestRepo.getGuestCategorySummary();
+    }
+
+    public List<Guest> getGuestsByUserId(
+            Integer userId
+    ) {
+
+        return guestRepo.findByUserId(
+                userId
+        );
+
     }
 
 }
