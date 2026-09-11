@@ -204,6 +204,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 
     @Override
     public Page<Expense> getPaginatedExpenses(
+            Integer userId,
             int page,
             int size,
             String search,
@@ -228,6 +229,7 @@ public class ExpenseServiceImpl implements ExpenseService {
                         : category.trim();
 
         return expenseRepo.findBySearchAndCategory(
+                userId,
                 searchValue,
                 categoryValue,
                 pageable
@@ -373,9 +375,14 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     @Override
-    public ExpenseSummaryDto getExpenseSummary() {
+    public ExpenseSummaryDto getExpenseSummary(Integer userId) {
 
-        List<Expense> expenses = expenseRepo.findAll();
+//        List<Expense> expenses = expenseRepo.findAll();
+
+        List<Expense> expenses =
+                expenseRepo.findAllByUserId(
+                        userId
+                );
 
         Double totalExpense = expenses.stream()
                 .map(Expense::getTotalAmount)
