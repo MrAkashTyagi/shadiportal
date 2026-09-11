@@ -44,6 +44,7 @@ public interface GuestService {
                                        Boolean invitationSent);
 
     ByteArrayInputStream getFilteredActualData(
+            Integer userId,
             String search,
             String gender,
             String adultOrchild,
