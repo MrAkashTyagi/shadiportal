@@ -12,25 +12,35 @@ import java.util.List;
 public interface ExpenseRepo extends JpaRepository<Expense, Integer> {
 
     @Query("""
-            SELECT e
-            FROM Expense e
-            WHERE
-                (
-                    :search IS NULL OR
-                    :search = '' OR
-                    LOWER(e.expenseName)
-                    LIKE LOWER(CONCAT('%', :search, '%'))
-                )
+        SELECT e
+        FROM Expense e
+        WHERE
+            e.user.id = :userId
             AND
-                (
-                    :category IS NULL OR
-                    :category = '' OR
-                    LOWER(e.category) = LOWER(:category)
-                )
-            """)
+            (
+                :search IS NULL
+                OR :search = ''
+                OR LOWER(e.expenseName)
+                LIKE LOWER(CONCAT('%', :search, '%'))
+            )
+            AND
+            (
+                :category IS NULL
+                OR :category = ''
+                OR LOWER(e.category) = LOWER(:category)
+            )
+        """)
     Page<Expense> findBySearchAndCategory(
-            @Param("search") String search,
-            @Param("category") String category,
+
+            @Param("userId")
+            Integer userId,
+
+            @Param("search")
+            String search,
+
+            @Param("category")
+            String category,
+
             Pageable pageable
     );
 
@@ -77,4 +87,39 @@ public interface ExpenseRepo extends JpaRepository<Expense, Integer> {
     Page<Expense> findAllByOrderByIdDesc(
             Pageable pageable
     );
+
+
+    Page<Expense> findAllByUserId(
+            Integer userId,
+            Pageable pageable
+    );
+
+    List<Expense> findAllByUserId(
+            Integer userId
+    );
+
+    @Query("""
+       SELECT COALESCE(
+           SUM(e.totalAmount),
+           0
+       )
+       FROM Expense e
+       WHERE e.user.id = :userId
+       """)
+    Double getTotalExpenseAmountByUserId(
+            @Param("userId") Integer userId
+    );
+
+    @Query("""
+       SELECT COALESCE(
+           SUM(e.paidAmount),
+           0
+       )
+       FROM Expense e
+       WHERE e.user.id = :userId
+       """)
+    Double getTotalPaidExpenseAmountByUserId(
+            @Param("userId") Integer userId
+    );
+
 }
