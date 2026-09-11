@@ -141,39 +141,85 @@ public class GuestController {
 
     @GetMapping("/download")
     public ResponseEntity<Resource> downloadExcel(
-            @RequestParam(required = false, defaultValue = "") String search,
-            @RequestParam(required = false, defaultValue = "") String gender,
-            @RequestParam(required = false, defaultValue = "") String adultOrchild,
-            @RequestParam(required = false, defaultValue = "") String guestCategory,
-            @RequestParam(required = false, defaultValue = "") String gift,
-            @RequestParam(required = false, defaultValue = "") String stay,
-            @RequestParam(required = false, defaultValue = "") String cash,
+
+            @RequestParam Integer userId,
+
+            @RequestParam(
+                    required = false,
+                    defaultValue = ""
+            )
+            String search,
+
+            @RequestParam(
+                    required = false,
+                    defaultValue = ""
+            )
+            String gender,
+
+            @RequestParam(
+                    required = false,
+                    defaultValue = ""
+            )
+            String adultOrchild,
+
+            @RequestParam(
+                    required = false,
+                    defaultValue = ""
+            )
+            String guestCategory,
+
+            @RequestParam(
+                    required = false,
+                    defaultValue = ""
+            )
+            String gift,
+
+            @RequestParam(
+                    required = false,
+                    defaultValue = ""
+            )
+            String stay,
+
+            @RequestParam(
+                    required = false,
+                    defaultValue = ""
+            )
+            String cash,
+
             @RequestParam(
                     required = false
             )
             Boolean invitationSent
+
     ) throws IOException {
 
         ByteArrayInputStream actualData =
-                this.guestService.getFilteredActualData(
+                guestService.getFilteredActualData(
+                        userId,
                         search,
                         gender,
                         adultOrchild,
-                        guestCategory,
                         gift,
-                        stay,
                         cash,
+                        guestCategory,
+                        stay,
                         invitationSent
                 );
 
-        InputStreamResource file = new InputStreamResource(actualData);
+        InputStreamResource file =
+                new InputStreamResource(
+                        actualData
+                );
 
-        String fileName = "guests.xlsx";
+        String fileName =
+                "guests.xlsx";
 
         return ResponseEntity.ok()
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + fileName + "\""
+                        "attachment; filename=\""
+                                + fileName
+                                + "\""
                 )
                 .contentType(
                         MediaType.parseMediaType(
@@ -182,7 +228,6 @@ public class GuestController {
                 )
                 .body(file);
     }
-
     @GetMapping("/summary")
     public GuestSummaryDto getGuestSummary(
 
