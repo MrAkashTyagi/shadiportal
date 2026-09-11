@@ -1,12 +1,15 @@
 package com.bigsquare.ShadiPortal.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +17,9 @@ import java.util.List;
 @Entity
 @Table(name = "user")
 @NoArgsConstructor
+@Getter
+@Setter
+@AllArgsConstructor
 //@AllArgsConstructor
 public class User {
 
@@ -44,6 +50,10 @@ public class User {
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
     List<Guest> guests = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "user")
+    private List<Expense> expenses = new ArrayList<>();
 
     public boolean getEnabled() {
         return enabled;
