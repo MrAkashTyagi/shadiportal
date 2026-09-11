@@ -1,13 +1,18 @@
 package com.bigsquare.ShadiPortal.controllers;
 
 import com.bigsquare.ShadiPortal.dto.LoginRequest;
+import com.bigsquare.ShadiPortal.dto.LoginResponseDto;
 import com.bigsquare.ShadiPortal.dto.RegisterRequest;
 import com.bigsquare.ShadiPortal.entities.User;
 import com.bigsquare.ShadiPortal.repositories.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+//import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -16,7 +21,12 @@ import java.util.Optional;
 public class AuthController {
 
     @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
     private UserRepo userRepo;
+
+//    register
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(
@@ -45,7 +55,9 @@ public class AuthController {
         );
 
         user.setPassword(
-                request.getPassword()
+                passwordEncoder.encode(
+                        request.getPassword()
+                )
         );
 
         user.setAbout(
@@ -63,6 +75,8 @@ public class AuthController {
 
         return ResponseEntity.ok(savedUser);
     }
+
+//    login
 
     @PostMapping("/login")
     public ResponseEntity<?> login(
@@ -84,8 +98,10 @@ public class AuthController {
         User user = userOptional.get();
 
         if (
-                !user.getPassword()
-                        .equals(request.getPassword())
+                !passwordEncoder.matches(
+                        request.getPassword(),
+                        user.getPassword()
+                )
         ) {
 
             return ResponseEntity
@@ -93,6 +109,42 @@ public class AuthController {
                     .body("Invalid password");
         }
 
-        return ResponseEntity.ok(user);
+
+        System.out.println(
+                "Email : " + request.getEmail()
+        );
+
+        System.out.println(
+                "Password From UI : "
+                        + request.getPassword()
+        );
+
+        System.out.println(
+                "Password From DB : "
+                        + user.getPassword()
+        );
+
+        System.out.println(
+                "Password Match : "
+                        + passwordEncoder.matches(
+                        request.getPassword(),
+                        user.getPassword()
+                )
+        );
+
+        System.out.println("LOGIN SUCCESS");
+
+
+
+
+        return ResponseEntity.ok(
+
+                new LoginResponseDto(
+                        user.getId(),
+                        user.getName(),
+                        user.getEmail()
+                )
+
+        );
     }
 }
