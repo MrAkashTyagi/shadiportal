@@ -27,10 +27,11 @@ public class GuestDataDumpController {
     private GuestDataDumpServiceImpl guestDataDumpService;
 
     @PostMapping("/upload")
-    public ResponseEntity<?> upload(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> upload(@RequestParam("file") MultipartFile file,
+                                    @RequestParam Integer userId) {
         if (GuestHelper.checkExcelFormat(file)) {
             //upload
-            this.guestDataDumpService.save(file);
+            this.guestDataDumpService.save(file, userId);
             return ResponseEntity.ok(Map.of("message", "File is uploaded successfully !! Data is saved to db !!"));
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please upload excel file only");
