@@ -41,7 +41,7 @@ public interface ExpenseService {
     void deleteExpense(Integer id);
 
     // Export
-    byte[] exportExpenses();
+    byte[] exportExpenses(Integer userId);
 
     ExpenseSummaryDto getExpenseSummary(Integer userId);
 
