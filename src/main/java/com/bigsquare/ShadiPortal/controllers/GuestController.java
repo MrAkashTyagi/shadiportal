@@ -32,6 +32,7 @@ public class GuestController {
     // get guests as per pagination
     @GetMapping("/guest")
     public Page<Guest> getAllGuests(
+            @RequestParam Integer userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false, defaultValue = "") String search,
@@ -42,8 +43,10 @@ public class GuestController {
             @RequestParam(required = false, defaultValue = "") String guestCategory,
             @RequestParam(required = false, defaultValue = "") String stay,
             @RequestParam(required = false, defaultValue = "") Boolean invitationSent
+
     ) {
         return this.guestService.getGuestWithPagination(
+                userId,
                 page,
                 size,
                 search,
@@ -64,10 +67,22 @@ public class GuestController {
 
 //    create Guests
 
+//    @PostMapping
+//    public Guest createGuest(@RequestBody Guest guest) {
+//        Guest guest1 = this.guestService.createGuest(guest);
+//        return guest1;
+//    }
+
     @PostMapping
-    public Guest createGuest(@RequestBody Guest guest) {
-        Guest guest1 = this.guestService.saveGuest(guest);
-        return guest1;
+    public Guest createGuest(
+            @RequestBody Guest guest,
+            @RequestParam Integer userId
+    ) {
+
+        return guestService.createGuest(
+                guest,
+                userId
+        );
     }
 
 //    get guest by id
@@ -169,11 +184,16 @@ public class GuestController {
     }
 
     @GetMapping("/summary")
-    public ResponseEntity<GuestSummaryDto> getSummary() {
+    public GuestSummaryDto getGuestSummary(
 
-        return ResponseEntity.ok(
-                guestService.getGuestSummary()
+            @RequestParam Integer userId
+
+    ) {
+
+        return guestService.getGuestSummary(
+                userId
         );
+
     }
 
     @GetMapping("/category-summary")
@@ -183,6 +203,17 @@ public class GuestController {
         return ResponseEntity.ok(
                 guestService.getGuestCategorySummary()
         );
+    }
+
+    @GetMapping("/user/{userId}")
+    public List<Guest> getGuestsByUserId(
+            @PathVariable Integer userId
+    ) {
+
+        return guestService
+                .getGuestsByUserId(
+                        userId
+                );
     }
 
 }
