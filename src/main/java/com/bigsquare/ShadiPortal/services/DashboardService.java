@@ -8,7 +8,9 @@ import java.util.List;
 
 public interface DashboardService {
 
-    DashboardSummaryDto getDashboardSummary();
+    DashboardSummaryDto getDashboardSummary(
+            Integer userId
+    );
 
     List<Guest> getRecentGuests();
 
