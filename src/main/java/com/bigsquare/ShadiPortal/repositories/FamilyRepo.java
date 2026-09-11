@@ -18,15 +18,29 @@ public interface FamilyRepo extends JpaRepository<Family, Integer> {
 
 
     @Query("""
-                SELECT f
-                FROM Family f
-                WHERE LOWER(f.familyName)
-                      LIKE LOWER(CONCAT('%', :search, '%'))
-                   OR CAST(f.id AS string)
-                      LIKE CONCAT('%', :search, '%')
-            """)
+        SELECT f
+        FROM Family f
+        WHERE
+            f.user.id = :userId
+            AND
+            (
+                LOWER(f.familyName)
+                LIKE LOWER(CONCAT('%', :search, '%'))
+
+                OR
+
+                CAST(f.id AS string)
+                LIKE CONCAT('%', :search, '%')
+            )
+        """)
     Page<Family> findBySearchQuery(
-            @Param("search") String search,
+
+            @Param("userId")
+            Integer userId,
+
+            @Param("search")
+            String search,
+
             Pageable pageable
     );
 
@@ -43,8 +57,30 @@ public interface FamilyRepo extends JpaRepository<Family, Integer> {
             FROM Family f
             """)
     Integer getLargestFamilySize();
-    
 
+    Optional<Family> findByFamilyNameIgnoreCaseAndUserId(
+            String familyName,
+            Integer userId
+    );
+
+    Page<Family> findAllByUserId(
+            Integer userId,
+            Pageable pageable
+    );
+
+    long countByUserId(
+            Integer userId
+    );
+
+    @Query("""
+       SELECT COUNT(g)
+       FROM Family f
+       JOIN f.guestList g
+       WHERE f.user.id = :userId
+       """)
+    Long getTotalFamilyMembersByUserId(
+            @Param("userId") Integer userId
+    );
 
 //    Page<Guest> findBySearchQuery(@Param("search") String search, Pageable pageable);
 }
