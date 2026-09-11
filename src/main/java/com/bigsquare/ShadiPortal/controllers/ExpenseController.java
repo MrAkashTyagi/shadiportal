@@ -264,21 +264,27 @@ public Expense createExpense(
     }
 
     @GetMapping("/export")
-    public ResponseEntity<byte[]> exportExpenses() {
+    public ResponseEntity<byte[]> exportExpenses(
+            @RequestParam Integer userId
+    ) {
 
-        byte[] excelData = expenseService.exportExpenses();
+        byte[] excelData =
+                expenseService.exportExpenses(
+                        userId
+                );
 
         return ResponseEntity.ok()
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=expenses.xlsx"
+                        "attachment; filename=\"expenses.xlsx\""
                 )
                 .contentType(
-                        MediaType.APPLICATION_OCTET_STREAM
+                        MediaType.parseMediaType(
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        )
                 )
                 .body(excelData);
     }
-
     @GetMapping("/bill/download/{id}")
     public ResponseEntity<Resource> downloadBill(
             @PathVariable Integer id
