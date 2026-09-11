@@ -66,45 +66,86 @@ public class ExpenseController {
 //    }
 
 
-    @PostMapping(
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-    )
-    public Expense createExpense(
-            @RequestPart("expense") String expenseJson,
-            @RequestPart(
-                    value = "bill",
-                    required = false
-            ) MultipartFile bill
-    ) {
-
-        try {
-
+//    @PostMapping(
+//            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+//    )
+//    public Expense createExpense(
+//            @RequestPart("expense") String expenseJson,
+//            @RequestPart(
+//                    value = "bill",
+//                    required = false
+//            ) MultipartFile bill
+//    ) {
+//
+//        try {
+//
+////            ObjectMapper mapper = new ObjectMapper();
+//
 //            ObjectMapper mapper = new ObjectMapper();
+//            mapper.findAndRegisterModules();
+//            Expense expense =
+//                    new ObjectMapper()
+//                            .findAndRegisterModules()
+//                            .readValue(
+//                                    expenseJson,
+//                                    Expense.class
+//                            );
+//
+//            return expenseService.createExpense(
+//                    expense,
+//                    bill
+//            );
+//
+//        } catch (Exception e) {
+//
+//            throw new RuntimeException(
+//                    "Error while creating expense",
+//                    e
+//            );
+//
+//        }
+//    }
 
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.findAndRegisterModules();
-            Expense expense =
-                    new ObjectMapper()
-                            .findAndRegisterModules()
-                            .readValue(
-                                    expenseJson,
-                                    Expense.class
-                            );
 
-            return expenseService.createExpense(
-                    expense,
-                    bill
-            );
+@PostMapping(
+        consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+)
+public Expense createExpense(
+        @RequestPart("expense") String expenseJson,
+        @RequestPart(
+                value = "bill",
+                required = false
+        ) MultipartFile bill,
+        @RequestParam Integer userId
+) {
 
-        } catch (Exception e) {
+    try {
 
-            throw new RuntimeException(
-                    "Error while creating expense",
-                    e
-            );
+        ObjectMapper mapper = new ObjectMapper();
 
-        }
+        mapper.findAndRegisterModules();
+
+        Expense expense =
+                mapper.readValue(
+                        expenseJson,
+                        Expense.class
+                );
+
+        return expenseService.createExpense(
+                expense,
+                bill,
+                userId
+        );
+
+    } catch (Exception exception) {
+
+        throw new RuntimeException(
+                "Error while creating expense",
+                exception
+        );
     }
+}
+
 
     @GetMapping("/bill/{id}")
     public ResponseEntity<Resource> viewBill(
