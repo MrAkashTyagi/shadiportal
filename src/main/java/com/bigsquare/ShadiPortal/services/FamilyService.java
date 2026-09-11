@@ -1,5 +1,6 @@
 package com.bigsquare.ShadiPortal.services;
 
+import com.bigsquare.ShadiPortal.dto.FamilyRequest;
 import com.bigsquare.ShadiPortal.dto.FamilySummaryDto;
 import com.bigsquare.ShadiPortal.entities.Family;
 import org.springframework.data.domain.Page;
@@ -8,17 +9,17 @@ import java.util.List;
 
 public interface FamilyService {
 
-    public Family createFamily(Family family);
+    public Family createFamily(FamilyRequest request);
 
     public List<Family> getAllFamilies();
 
-    public Family updateFamily(Integer id, Family family);
+    public Family updateFamily(Integer id, FamilyRequest request);
 
     public Family getByFamilityId(Integer id);
 
     public void deleteFamily(Integer id);
 
-    Page<Family> getPaginatedFamilyResult(int page, int size, String search);
+    Page<Family> getPaginatedFamilyResult(Integer userId, int page, int size, String search);
 
     FamilySummaryDto getFamilySummary();
 
