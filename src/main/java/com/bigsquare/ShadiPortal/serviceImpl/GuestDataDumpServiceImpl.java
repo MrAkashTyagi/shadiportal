@@ -2,9 +2,11 @@ package com.bigsquare.ShadiPortal.serviceImpl;
 
 import com.bigsquare.ShadiPortal.entities.Family;
 import com.bigsquare.ShadiPortal.entities.Guest;
+import com.bigsquare.ShadiPortal.entities.User;
 import com.bigsquare.ShadiPortal.helper.GuestHelper;
 import com.bigsquare.ShadiPortal.repositories.FamilyRepo;
 import com.bigsquare.ShadiPortal.repositories.GuestRepo;
+import com.bigsquare.ShadiPortal.repositories.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,6 +23,9 @@ public class GuestDataDumpServiceImpl {
 
     @Autowired
     private FamilyRepo familyRepo;
+
+    @Autowired
+    private UserRepo userRepo;
 
     //saving data from excel to db
 //    public void save(MultipartFile file) {
@@ -45,27 +50,89 @@ public class GuestDataDumpServiceImpl {
         return stream;
     }
 
-    public void save(MultipartFile file) {
+    public void save(
+            MultipartFile file,
+            Integer userId
+    ) {
+
         try {
-            List<Guest> guests = GuestHelper.convertExcelToListOfGuests(file.getInputStream());
 
-            // Loop chala kar har guest ki Family ko database se link karein
+            User user =
+                    userRepo.findById(userId)
+                            .orElseThrow(() ->
+                                    new RuntimeException(
+                                            "User not found"
+                                    )
+                            );
+
+            List<Guest> guests =
+                    GuestHelper.convertExcelToListOfGuests(
+                            file.getInputStream()
+                    );
+
             for (Guest guest : guests) {
-                if (guest.getFamily() != null && guest.getFamily().getId() != null) {
-                    Integer famId = guest.getFamily().getId();
 
-                    // Database se real, managed Family record uthayein
-                    Family managedFamily = familyRepo.findById(famId).orElse(null);
+                guest.setUser(user);
 
-                    // Agar database mein family mili toh wahi set karein, nahi toh null
-                    guest.setFamily(managedFamily);
+                if (
+                        guest.getFamily() != null &&
+                                guest.getFamily().getFamilyName() != null &&
+                                !guest.getFamily()
+                                        .getFamilyName()
+                                        .isBlank()
+                ) {
+
+                    String familyName =
+                            guest.getFamily()
+                                    .getFamilyName()
+                                    .trim();
+
+                    Family family =
+                            familyRepo
+                                    .findByFamilyNameIgnoreCaseAndUserId(
+                                            familyName,
+                                            userId
+                                    )
+                                    .orElseGet(() -> {
+
+                                        Family newFamily =
+                                                new Family();
+
+                                        newFamily.setFamilyName(
+                                                familyName
+                                        );
+
+                                        newFamily.setUser(
+                                                user
+                                        );
+
+                                        return familyRepo.save(
+                                                newFamily
+                                        );
+                                    });
+
+                    guest.setFamily(
+                            family
+                    );
+
+                } else {
+
+                    guest.setFamily(null);
                 }
             }
 
-            this.guestRepo.saveAll(guests);
-        } catch (IOException e) {
-            e.printStackTrace();
+            guestRepo.saveAll(
+                    guests
+            );
+
+        } catch (Exception exception) {
+
+            exception.printStackTrace();
+
+            throw new RuntimeException(
+                    "Error while importing guests",
+                    exception
+            );
         }
     }
-
 }
