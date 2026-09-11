@@ -9,10 +9,7 @@ import com.bigsquare.ShadiPortal.entities.Guest;
 import com.bigsquare.ShadiPortal.services.DashboardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -26,10 +23,16 @@ public class DashboardController {
 
     @GetMapping("/summary")
     public ResponseEntity<DashboardSummaryDto>
-    getDashboardSummary() {
+    getDashboardSummary(
+
+            @RequestParam Integer userId
+
+    ) {
 
         return ResponseEntity.ok(
-                dashboardService.getDashboardSummary()
+                dashboardService.getDashboardSummary(
+                        userId
+                )
         );
     }
 
