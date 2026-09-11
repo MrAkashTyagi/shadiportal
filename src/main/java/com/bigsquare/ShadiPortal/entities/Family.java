@@ -4,6 +4,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.AnyDiscriminatorImplicitValues;
 import org.springframework.boot.autoconfigure.web.WebProperties;
 
@@ -11,6 +15,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "family")
+@Getter
+@Setter
 public class Family {
 
     @Id
@@ -23,12 +29,35 @@ public class Family {
     @JsonIgnoreProperties("family")
     private List<Guest> guestList;
 
-    @JsonCreator
-    public Family(@JsonProperty("id") Integer id, @JsonProperty("familyName") String familyName, @JsonProperty("guestList") List<Guest> guestList) {
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    @JsonIgnoreProperties({
+            "password",
+            "guests",
+            "families",
+            "expenses"
+    })
+    private User user;
+
+//    @JsonCreator
+//    public Family(@JsonProperty("id") Integer id, @JsonProperty("familyName") String familyName, @JsonProperty("guestList") List<Guest> guestList) {
+//        this.id = id;
+//        this.familyName = familyName;
+//        this.guestList = guestList;
+//    }
+
+    public Family(
+            Integer id,
+            String familyName,
+            List<Guest> guestList,
+            User user
+    ) {
         this.id = id;
         this.familyName = familyName;
         this.guestList = guestList;
+        this.user = user;
     }
+
 
     public Family() {
     }
