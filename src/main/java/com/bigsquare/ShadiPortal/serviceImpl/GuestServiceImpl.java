@@ -251,14 +251,23 @@ public class GuestServiceImpl implements GuestService {
 //        return this.guestRepo.save(guest);
 //    }
 
-    public ByteArrayInputStream getActualData() throws IOException {
-        List<Guest> guestList = this.guestRepo.findAll();
-        System.out.println(guestList);
-        ByteArrayInputStream stream = GuestHelper.dataToExcel(guestList);
-        return stream;
+    public ByteArrayInputStream getActualData(
+            Integer userId
+    ) throws IOException {
+
+        List<Guest> guestList =
+                guestRepo.findAllByUserId(
+                        userId
+                );
+
+        return GuestHelper.dataToExcel(
+                guestList
+        );
     }
 
+    @Override
     public ByteArrayInputStream getFilteredActualData(
+            Integer userId,
             String search,
             String gender,
             String adultOrchild,
@@ -269,41 +278,65 @@ public class GuestServiceImpl implements GuestService {
             Boolean invitationSent
     ) throws IOException {
 
+        if (userId == null) {
+
+            throw new IllegalArgumentException(
+                    "User id is required"
+            );
+        }
+
         String searchValue =
-                search == null ? "" : search.trim();
+                search == null
+                        ? ""
+                        : search.trim();
 
         String genderValue =
-                gender == null ? "" : gender.trim();
+                gender == null
+                        ? ""
+                        : gender.trim();
 
         String typeValue =
-                adultOrchild == null ? "" : adultOrchild.trim();
+                adultOrchild == null
+                        ? ""
+                        : adultOrchild.trim();
 
         String giftValue =
-                gift == null ? "" : gift.trim();
+                gift == null
+                        ? ""
+                        : gift.trim();
 
         String cashValue =
-                cash == null ? "" : cash.trim();
+                cash == null
+                        ? ""
+                        : cash.trim();
 
         String categoryValue =
-                guestCategory == null ? "" : guestCategory.trim();
+                guestCategory == null
+                        ? ""
+                        : guestCategory.trim();
 
         String stayValue =
-                stay == null ? "" : stay.trim();
+                stay == null
+                        ? ""
+                        : stay.trim();
 
         List<Guest> guestList =
-                this.guestRepo.findAllGuestsWithFilters(
+                guestRepo.findAllGuestsWithFilters(
+                        userId,
                         searchValue,
                         genderValue,
                         typeValue,
                         categoryValue,
                         giftValue,
                         stayValue,
-                        cashValue
+                        cashValue,
+                        invitationSent
                 );
 
-        return GuestHelper.dataToExcel(guestList);
+        return GuestHelper.dataToExcel(
+                guestList
+        );
     }
-
     @Override
     public GuestSummaryDto getGuestSummary(
             Integer userId
