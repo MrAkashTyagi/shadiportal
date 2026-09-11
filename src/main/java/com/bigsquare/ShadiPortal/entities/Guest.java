@@ -35,11 +35,18 @@ public class Guest {
 
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "family_id")
-    @JsonIgnoreProperties("guestList")
+    @JsonIgnoreProperties({"guestList", "user"})
     private Family family;
 
-    @ManyToOne
-    User user;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    @JsonIgnoreProperties({
+            "password",
+            "guests",
+            "families",
+            "expenses"
+    })
+    private User user;
 
     public Guest(Integer id, String name, Family family, String phoneNumber, String whatsapp_Number, String email, String guestCategory, String gender, String adultOrchild, String gift, String stay, User user) {
         this.id = id;
