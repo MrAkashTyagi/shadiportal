@@ -24,6 +24,7 @@ public interface ExpenseService {
 
     // Paginated + Search + Category Filter
     Page<Expense> getPaginatedExpenses(
+            Integer userId,
             int page,
             int size,
             String search,
@@ -36,7 +37,7 @@ public interface ExpenseService {
     // Export
     byte[] exportExpenses();
 
-    ExpenseSummaryDto getExpenseSummary();
+    ExpenseSummaryDto getExpenseSummary(Integer userId);
 
     List<ExpenseCategorySummaryDto>
     getExpenseCategorySummary();
