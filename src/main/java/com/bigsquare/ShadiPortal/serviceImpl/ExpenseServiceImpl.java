@@ -369,104 +369,172 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     @Override
-    public byte[] exportExpenses() {
+    public byte[] exportExpenses(
+            Integer userId
+    ) {
+
+        if (userId == null) {
+
+            throw new IllegalArgumentException(
+                    "User id is required"
+            );
+        }
 
         List<Expense> expenses =
-                expenseRepo.findAll();
+                expenseRepo.findAllByUserId(
+                        userId
+                );
 
         try (
-                Workbook workbook = new XSSFWorkbook();
+                Workbook workbook =
+                        new XSSFWorkbook();
+
                 ByteArrayOutputStream out =
                         new ByteArrayOutputStream()
         ) {
 
             Sheet sheet =
-                    workbook.createSheet("Expenses");
+                    workbook.createSheet(
+                            "Expenses"
+                    );
 
-            Row header = sheet.createRow(0);
+            Row header =
+                    sheet.createRow(0);
 
             header.createCell(0)
-                    .setCellValue("Expense Name");
+                    .setCellValue(
+                            "Expense Name"
+                    );
 
             header.createCell(1)
-                    .setCellValue("Category");
+                    .setCellValue(
+                            "Category"
+                    );
 
             header.createCell(2)
-                    .setCellValue("Description");
+                    .setCellValue(
+                            "Description"
+                    );
 
             header.createCell(3)
-                    .setCellValue("Total Amount");
+                    .setCellValue(
+                            "Total Amount"
+                    );
 
             header.createCell(4)
-                    .setCellValue("Paid Amount");
+                    .setCellValue(
+                            "Paid Amount"
+                    );
 
             header.createCell(5)
-                    .setCellValue("Pending Amount");
+                    .setCellValue(
+                            "Pending Amount"
+                    );
 
             header.createCell(6)
-                    .setCellValue("Expense Date");
+                    .setCellValue(
+                            "Expense Date"
+                    );
 
             header.createCell(7)
-                    .setCellValue("Paid By");
+                    .setCellValue(
+                            "Paid By"
+                    );
 
             int rowNum = 1;
 
             for (Expense expense : expenses) {
 
                 Row row =
-                        sheet.createRow(rowNum++);
+                        sheet.createRow(
+                                rowNum++
+                        );
 
                 row.createCell(0)
-                        .setCellValue(expense.getExpenseName());
+                        .setCellValue(
+                                expense.getExpenseName() != null
+                                        ? expense.getExpenseName()
+                                        : ""
+                        );
 
                 row.createCell(1)
-                        .setCellValue(expense.getCategory());
+                        .setCellValue(
+                                expense.getCategory() != null
+                                        ? expense.getCategory()
+                                        : ""
+                        );
 
                 row.createCell(2)
-                        .setCellValue(expense.getDescription());
+                        .setCellValue(
+                                expense.getDescription() != null
+                                        ? expense.getDescription()
+                                        : ""
+                        );
+
+                double totalAmount =
+                        expense.getTotalAmount() != null
+                                ? expense.getTotalAmount()
+                                : 0.0;
+
+                double paidAmount =
+                        expense.getPaidAmount() != null
+                                ? expense.getPaidAmount()
+                                : 0.0;
+
+                double pendingAmount =
+                        totalAmount - paidAmount;
 
                 row.createCell(3)
                         .setCellValue(
-                                expense.getTotalAmount() != null
-                                        ? expense.getTotalAmount().doubleValue()
-                                        : 0
+                                totalAmount
                         );
 
                 row.createCell(4)
                         .setCellValue(
-                                expense.getPaidAmount() != null
-                                        ? expense.getPaidAmount().doubleValue()
-                                        : 0
+                                paidAmount
                         );
 
                 row.createCell(5)
                         .setCellValue(
-                                expense.getTotalAmount() != null
-                                        && expense.getPaidAmount() != null
-                                        ? expense.getTotalAmount()
-                                          - expense.getPaidAmount()
-                                        : 0
+                                pendingAmount
                         );
 
                 row.createCell(6)
                         .setCellValue(
                                 expense.getExpenseDate() != null
-                                        ? expense.getExpenseDate().toString()
+                                        ? expense.getExpenseDate()
+                                        .toString()
                                         : ""
                         );
 
                 row.createCell(7)
-                        .setCellValue(expense.getPaidBy());
+                        .setCellValue(
+                                expense.getPaidBy() != null
+                                        ? expense.getPaidBy()
+                                        : ""
+                        );
+            }
+
+            for (
+                    int columnIndex = 0;
+                    columnIndex <= 7;
+                    columnIndex++
+            ) {
+
+                sheet.autoSizeColumn(
+                        columnIndex
+                );
             }
 
             workbook.write(out);
 
             return out.toByteArray();
 
-        } catch (Exception e) {
+        } catch (Exception exception) {
+
             throw new RuntimeException(
                     "Error while exporting expenses",
-                    e
+                    exception
             );
         }
     }
