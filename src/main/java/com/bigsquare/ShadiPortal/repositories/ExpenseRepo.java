@@ -122,4 +122,8 @@ public interface ExpenseRepo extends JpaRepository<Expense, Integer> {
             @Param("userId") Integer userId
     );
 
+    Page<Expense> findByUserIdOrderByIdDesc(
+            Long userId,
+            Pageable pageable);
+
 }
