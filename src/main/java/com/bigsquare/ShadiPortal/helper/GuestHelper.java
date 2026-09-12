@@ -2,7 +2,11 @@ package com.bigsquare.ShadiPortal.helper;
 
 import com.bigsquare.ShadiPortal.entities.Family;
 import com.bigsquare.ShadiPortal.entities.Guest;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,9 +19,15 @@ import java.util.List;
 
 public class GuestHelper {
 
-    // 1. HEADERS ARRAY: Sequence matching your excel layout precisely
-    public static String[] HEADERS = {
-            "guest_id",
+    /*
+     * Final clean Guest import/export format.
+     *
+     * Removed:
+     * guest_id
+     * familyId
+     * userId
+     */
+    public static final String[] HEADERS = {
             "email",
             "name",
             "gender",
@@ -25,8 +35,6 @@ public class GuestHelper {
             "adultOrChild",
             "phoneNumber",
             "whatsapp_Number",
-            "familyId",
-            "userId",
             "gift",
             "cash",
             "stay",
@@ -34,211 +42,213 @@ public class GuestHelper {
             "invitationSent"
     };
 
-    public static String SHEET_NAME = "GUESTS_DETAILS";
+    public static final String SHEET_NAME =
+            "GUESTS_DETAILS";
 
-    // DATA TO EXCEL DUMP UTILITY
-    public static ByteArrayInputStream dataToExcel(List<Guest> guestList) throws IOException {
-        Workbook workbook = new XSSFWorkbook();
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        try {
-            Sheet sheet = workbook.createSheet(SHEET_NAME);
+    /*
+     * Converts Guest data into Excel.
+     */
+    public static ByteArrayInputStream dataToExcel(
+            List<Guest> guestList
+    ) throws IOException {
 
-            Row row = sheet.createRow(0);
-            for (int i = 0; i < HEADERS.length; i++) {
-                Cell cell = row.createCell(i);
-                cell.setCellValue(HEADERS[i]);
+        try (
+                Workbook workbook =
+                        new XSSFWorkbook();
+
+                ByteArrayOutputStream outputStream =
+                        new ByteArrayOutputStream()
+        ) {
+
+            Sheet sheet =
+                    workbook.createSheet(
+                            SHEET_NAME
+                    );
+
+            Row headerRow =
+                    sheet.createRow(0);
+
+            for (
+                    int headerIndex = 0;
+                    headerIndex < HEADERS.length;
+                    headerIndex++
+            ) {
+
+                headerRow.createCell(
+                        headerIndex
+                ).setCellValue(
+                        HEADERS[headerIndex]
+                );
             }
 
             int rowIndex = 1;
+
             for (Guest guest : guestList) {
-                Row dataRow = sheet.createRow(rowIndex++);
-                dataRow.createCell(0).setCellValue(guest.getId() != null ? guest.getId() : 0);
-                dataRow.createCell(1).setCellValue(guest.getEmail() != null ? guest.getEmail() : "");
-                dataRow.createCell(2).setCellValue(guest.getName() != null ? guest.getName() : "");
-                dataRow.createCell(3).setCellValue(guest.getGender() != null ? guest.getGender() : "");
-                dataRow.createCell(4).setCellValue(guest.getGuestCategory() != null ? guest.getGuestCategory() : "");
-                dataRow.createCell(5).setCellValue(guest.getAdultOrchild() != null ? guest.getAdultOrchild() : "Adult");
-                dataRow.createCell(6).setCellValue(guest.getPhoneNumber() != null ? guest.getPhoneNumber() : "");
-                dataRow.createCell(7).setCellValue(guest.getWhatsapp_Number() != null ? guest.getWhatsapp_Number() : "");
 
+                Row dataRow =
+                        sheet.createRow(
+                                rowIndex++
+                        );
 
-                if (guest.getFamily() != null) {
-                    dataRow.createCell(8).setCellValue(guest.getFamily().getId());
-                } else {
-                    dataRow.createCell(8).setCellValue("");
-                }
+                dataRow.createCell(0)
+                        .setCellValue(
+                                valueOrEmpty(
+                                        guest.getEmail()
+                                )
+                        );
 
-//                dataRow.createCell(9).setCellValue("");
+                dataRow.createCell(1)
+                        .setCellValue(
+                                valueOrEmpty(
+                                        guest.getName()
+                                )
+                        );
+
+                dataRow.createCell(2)
+                        .setCellValue(
+                                valueOrEmpty(
+                                        guest.getGender()
+                                )
+                        );
+
+                dataRow.createCell(3)
+                        .setCellValue(
+                                valueOrEmpty(
+                                        guest.getGuestCategory()
+                                )
+                        );
+
+                dataRow.createCell(4)
+                        .setCellValue(
+                                guest.getAdultOrchild() != null
+                                        && !guest.getAdultOrchild().isBlank()
+                                        ? guest.getAdultOrchild()
+                                        : "Adult"
+                        );
+
+                dataRow.createCell(5)
+                        .setCellValue(
+                                valueOrEmpty(
+                                        guest.getPhoneNumber()
+                                )
+                        );
+
+                dataRow.createCell(6)
+                        .setCellValue(
+                                valueOrEmpty(
+                                        guest.getWhatsapp_Number()
+                                )
+                        );
+
+                dataRow.createCell(7)
+                        .setCellValue(
+                                valueOrEmpty(
+                                        guest.getGift()
+                                )
+                        );
+
+                dataRow.createCell(8)
+                        .setCellValue(
+                                valueOrEmpty(
+                                        guest.getCash()
+                                )
+                        );
 
                 dataRow.createCell(9)
                         .setCellValue(
-                                guest.getUser() != null &&
-                                        guest.getUser().getId() != null
-                                        ? guest.getUser().getId()
-                                        : 0
+                                valueOrEmpty(
+                                        guest.getStay()
+                                )
                         );
-                dataRow.createCell(10).setCellValue(guest.getGift() != null ? guest.getGift() : "");
-                dataRow.createCell(11).setCellValue(guest.getCash() != null ? guest.getCash() : "");
-                dataRow.createCell(12).setCellValue(guest.getStay() != null ? guest.getStay() : "");
-                dataRow.createCell(13).setCellValue(guest.getFamily() != null ? guest.getFamily().getFamilyName() : "");
-                dataRow.createCell(14).setCellValue(guest.getInvitationSent() != null ? guest.getInvitationSent() : false);
+
+                dataRow.createCell(10)
+                        .setCellValue(
+                                guest.getFamily() != null
+                                        ? valueOrEmpty(
+                                        guest.getFamily()
+                                                .getFamilyName()
+                                )
+                                        : ""
+                        );
+
+                dataRow.createCell(11)
+                        .setCellValue(
+                                Boolean.TRUE.equals(
+                                        guest.getInvitationSent()
+                                )
+                        );
             }
-            workbook.write(out);
-            return new ByteArrayInputStream(out.toByteArray());
 
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        } finally {
-            workbook.close();
-            out.close();
+            for (
+                    int columnIndex = 0;
+                    columnIndex < HEADERS.length;
+                    columnIndex++
+            ) {
+
+                sheet.autoSizeColumn(
+                        columnIndex
+                );
+            }
+
+            workbook.write(
+                    outputStream
+            );
+
+            return new ByteArrayInputStream(
+                    outputStream.toByteArray()
+            );
         }
     }
 
-    public static boolean checkExcelFormat(MultipartFile file) {
-        String contentType = file.getContentType();
-//        return contentType != null && contentType.equals("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                .equals(contentType)
-                || "application/octet-stream".equals(contentType);
-    }
-
-    // CONVERT EXCEL TO LIST OF GUESTS (100% PRO COMPILER COMPATIBLE VALUE SEQUENCE)
-//    public static List<Guest> convertExcelToListOfGuests(InputStream is) {
-//        List<Guest> guests = new ArrayList<>();
-//        DataFormatter dataFormatter = new DataFormatter();
-//
-//        try (XSSFWorkbook workbook = new XSSFWorkbook(is)) {
-//            Sheet sheet = workbook.getSheetAt(0);
-//            int totalRows = sheet.getPhysicalNumberOfRows();
-//
-//            // FIX FIXED: Loop standard structure restored without typo texts interruptions
-//            for (int i = 1; i < totalRows; i++) {
-//                Row row = sheet.getRow(i);
-//                if (row == null) continue;
-//
-//                Guest guest = new Guest();
-//                guest.setId(null);
-//
-//                // Index 1: email
-//                Cell cell1 = row.getCell(0);
-//                guest.setEmail(dataFormatter.formatCellValue(cell1));
-//
-//                // Index 2: name
-//                Cell cell2 = row.getCell(1);
-//                guest.setName(dataFormatter.formatCellValue(cell2));
-//
-//                // Index 3: gender
-//                Cell cell3 = row.getCell(2);
-//                guest.setGender(dataFormatter.formatCellValue(cell3));
-//
-//                // Index 4: guestCategory
-//                Cell cell4 = row.getCell(3);
-//                guest.setGuestCategory(dataFormatter.formatCellValue(cell4));
-//
-//                // Index 5: adultOrChild ("Ad" mapped to "Adult", "Ch" mapped to "Child")
-//                Cell cell5 = row.getCell(4);
-//                String type = dataFormatter.formatCellValue(cell5).trim();
-//                if (type.equalsIgnoreCase("Ad")) {
-//                    guest.setAdultOrchild("Adult");
-//                } else if (type.equalsIgnoreCase("Ch")) {
-//                    guest.setAdultOrchild("Child");
-//                } else {
-//                    guest.setAdultOrchild(type.isEmpty() ? "Adult" : type);
-//                }
-//
-//                // Index 6: phoneNumber
-//                Cell cell6 = row.getCell(5);
-//                guest.setPhoneNumber(dataFormatter.formatCellValue(cell6));
-//
-//                // Index 7: whatsapp_Number
-//                Cell cell7 = row.getCell(6);
-//                String whatsapp = dataFormatter.formatCellValue(cell7).trim();
-//                guest.setWhatsapp_Number(whatsapp.isEmpty() ? guest.getPhoneNumber() : whatsapp);
-//
-//                // Index 8: familyId relational foreign key configuration binding
-//                Cell cell8 = row.getCell(7);
-//                if (cell8 != null) {
-//                    try {
-//                        Integer familyIdPointer = null;
-//                        if (cell8.getCellType() == CellType.NUMERIC) {
-//                            familyIdPointer = (int) cell8.getNumericCellValue();
-//                        } else {
-//                            String rawIdText = dataFormatter.formatCellValue(cell8).trim();
-//                            if (!rawIdText.isEmpty()) {
-//                                familyIdPointer = Integer.parseInt(rawIdText);
-//                            }
-//                        }
-//
-//                        if (familyIdPointer != null) {
-//                            Family linkedFamilyEntity = new Family();
-//                            linkedFamilyEntity.setId(familyIdPointer);
-//                            guest.setFamily(linkedFamilyEntity);
-//                        }
-//                    } catch (Exception ex) {
-//                        System.err.println("Error mapping relational index " + i + ": " + ex.getMessage());
-//                    }
-//                }
-//
-//                // Index 9 (userId) processing elements omitted dynamically
-//
-//                if (guest.getName() != null && !guest.getName().trim().isEmpty()) {
-//                    guests.add(guest);
-//                }
-//            }
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//
-//        return guests;
-//    }
-
-    private static String getCellValue(
-            Row row,
-            int cellIndex,
-            DataFormatter formatter
+    /*
+     * Checks supported Excel formats.
+     */
+    public static boolean checkExcelFormat(
+            MultipartFile file
     ) {
 
-        Cell cell =
-                row.getCell(
-                        cellIndex,
-                        Row.MissingCellPolicy.RETURN_BLANK_AS_NULL
-                );
-
-        if (cell == null) {
-            return "";
-        }
-
-        return formatter
-                .formatCellValue(cell)
-                .trim();
-    }
-
-    private static Boolean getBooleanCellValue(
-            Row row,
-            int cellIndex,
-            DataFormatter formatter
-    ) {
-
-        String value =
-                getCellValue(
-                        row,
-                        cellIndex,
-                        formatter
-                );
-
-        if (value.isBlank()) {
+        if (
+                file == null ||
+                        file.isEmpty()
+        ) {
             return false;
         }
 
-        return value.equalsIgnoreCase("true")
-                || value.equalsIgnoreCase("yes")
-                || value.equalsIgnoreCase("y")
-                || value.equalsIgnoreCase("1");
+        String contentType =
+                file.getContentType();
+
+        String originalFileName =
+                file.getOriginalFilename();
+
+        boolean validContentType =
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        .equals(contentType)
+                        ||
+                        "application/octet-stream"
+                                .equals(contentType);
+
+        boolean validExtension =
+                originalFileName != null
+                        &&
+                        originalFileName
+                                .toLowerCase()
+                                .endsWith(".xlsx");
+
+        return validContentType
+                || validExtension;
     }
 
-    public static List<Guest> convertExcelToListOfGuests(
+    /*
+     * Converts Excel records into Guest objects.
+     *
+     * User ownership is intentionally not read from Excel.
+     * GuestDataDumpServiceImpl assigns the current User.
+     *
+     * Family ID is also not read.
+     * Family is resolved by family name for the current User.
+     */
+    public static List<Guest>
+    convertExcelToListOfGuests(
             InputStream inputStream
     ) {
 
@@ -250,23 +260,24 @@ public class GuestHelper {
 
         try (
                 XSSFWorkbook workbook =
-                        new XSSFWorkbook(inputStream)
+                        new XSSFWorkbook(
+                                inputStream
+                        )
         ) {
 
             Sheet sheet =
                     workbook.getSheetAt(0);
 
-            int lastRowNumber =
-                    sheet.getLastRowNum();
-
             for (
                     int rowIndex = 1;
-                    rowIndex <= lastRowNumber;
+                    rowIndex <= sheet.getLastRowNum();
                     rowIndex++
             ) {
 
                 Row row =
-                        sheet.getRow(rowIndex);
+                        sheet.getRow(
+                                rowIndex
+                        );
 
                 if (row == null) {
                     continue;
@@ -275,23 +286,23 @@ public class GuestHelper {
                 String email =
                         getCellValue(
                                 row,
-                                1,
+                                0,
                                 formatter
                         );
 
                 String name =
                         getCellValue(
                                 row,
-                                2,
+                                1,
                                 formatter
                         );
 
                 /*
-                 * Completely empty row ko ignore karo.
+                 * Completely empty records are ignored.
                  */
                 if (
-                        name.isBlank() &&
-                                email.isBlank()
+                        email.isBlank() &&
+                                name.isBlank()
                 ) {
                     continue;
                 }
@@ -300,8 +311,7 @@ public class GuestHelper {
                         new Guest();
 
                 /*
-                 * Excel guest_id ignore hoga.
-                 * Database fresh ID generate karega.
+                 * ID will be generated by the database.
                  */
                 guest.setId(null);
 
@@ -316,7 +326,7 @@ public class GuestHelper {
                 guest.setGender(
                         getCellValue(
                                 row,
-                                3,
+                                2,
                                 formatter
                         )
                 );
@@ -324,7 +334,7 @@ public class GuestHelper {
                 guest.setGuestCategory(
                         getCellValue(
                                 row,
-                                4,
+                                3,
                                 formatter
                         )
                 );
@@ -332,7 +342,7 @@ public class GuestHelper {
                 String adultOrChild =
                         getCellValue(
                                 row,
-                                5,
+                                4,
                                 formatter
                         );
 
@@ -368,7 +378,7 @@ public class GuestHelper {
                 guest.setPhoneNumber(
                         getCellValue(
                                 row,
-                                6,
+                                5,
                                 formatter
                         )
                 );
@@ -376,7 +386,7 @@ public class GuestHelper {
                 String whatsappNumber =
                         getCellValue(
                                 row,
-                                7,
+                                6,
                                 formatter
                         );
 
@@ -386,21 +396,10 @@ public class GuestHelper {
                                 : whatsappNumber
                 );
 
-                /*
-                 * Index 8: familyId
-                 * Ignore karna hai.
-                 */
-
-                /*
-                 * Index 9: userId
-                 * Ignore karna hai.
-                 * Current user service layer me set hoga.
-                 */
-
                 guest.setGift(
                         getCellValue(
                                 row,
-                                10,
+                                7,
                                 formatter
                         )
                 );
@@ -408,7 +407,7 @@ public class GuestHelper {
                 guest.setCash(
                         getCellValue(
                                 row,
-                                11,
+                                8,
                                 formatter
                         )
                 );
@@ -416,18 +415,15 @@ public class GuestHelper {
                 guest.setStay(
                         getCellValue(
                                 row,
-                                12,
+                                9,
                                 formatter
                         )
                 );
 
-                /*
-                 * Family ko ID se nahi, name se map karenge.
-                 */
                 String familyName =
                         getCellValue(
                                 row,
-                                13,
+                                10,
                                 formatter
                         );
 
@@ -440,10 +436,6 @@ public class GuestHelper {
                             familyName.trim()
                     );
 
-                    /*
-                     * Service layer is Family name ko current user ke
-                     * scope me existing Family se replace karegi.
-                     */
                     guest.setFamily(
                             family
                     );
@@ -452,7 +444,7 @@ public class GuestHelper {
                 guest.setInvitationSent(
                         getBooleanCellValue(
                                 row,
-                                14,
+                                11,
                                 formatter
                         )
                 );
@@ -471,5 +463,70 @@ public class GuestHelper {
         }
 
         return guests;
+    }
+
+    private static String getCellValue(
+            Row row,
+            int cellIndex,
+            DataFormatter formatter
+    ) {
+
+        Cell cell =
+                row.getCell(
+                        cellIndex,
+                        Row.MissingCellPolicy
+                                .RETURN_BLANK_AS_NULL
+                );
+
+        if (cell == null) {
+            return "";
+        }
+
+        return formatter
+                .formatCellValue(cell)
+                .trim();
+    }
+
+    private static Boolean getBooleanCellValue(
+            Row row,
+            int cellIndex,
+            DataFormatter formatter
+    ) {
+
+        String value =
+                getCellValue(
+                        row,
+                        cellIndex,
+                        formatter
+                );
+
+        if (value.isBlank()) {
+            return false;
+        }
+
+        return value.equalsIgnoreCase(
+                "true"
+        )
+                ||
+                value.equalsIgnoreCase(
+                        "yes"
+                )
+                ||
+                value.equalsIgnoreCase(
+                        "y"
+                )
+                ||
+                value.equalsIgnoreCase(
+                        "1"
+                );
+    }
+
+    private static String valueOrEmpty(
+            String value
+    ) {
+
+        return value != null
+                ? value
+                : "";
     }
 }
