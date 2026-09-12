@@ -214,6 +214,10 @@ public interface GuestRepo extends JpaRepository<Guest, Integer> {
             Integer userId
     );
 
+    Page<Guest> findByUserIdOrderByIdDesc(
+            Long userId,
+            Pageable pageable);
+
 //    long countByUserIdAndInvitationSentTrue(
 //            Integer userId
 //    );
