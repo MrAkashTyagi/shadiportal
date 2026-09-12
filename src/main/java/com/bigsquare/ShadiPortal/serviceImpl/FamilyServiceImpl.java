@@ -83,9 +83,15 @@ public class FamilyServiceImpl implements FamilyService {
         return familyRepo.save(family);
     }
 
+//    @Override
+//    public List<Family> getAllFamilies() {
+//        return this.familyRepo.findAll();
+//    }
+
     @Override
-    public List<Family> getAllFamilies() {
-        return this.familyRepo.findAll();
+    public List<Family> getAllFamilies(Long userId) {
+
+        return familyRepo.findByUserId(userId);
     }
 
 //    @Override
