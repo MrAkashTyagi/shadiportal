@@ -86,5 +86,8 @@ public interface FamilyRepo extends JpaRepository<Family, Integer> {
             @Param("userId") Integer userId
     );
 
+    List<Family> findByUserId(Long userId);
+
+
 //    Page<Guest> findBySearchQuery(@Param("search") String search, Pageable pageable);
 }
