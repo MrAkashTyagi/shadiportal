@@ -12,7 +12,11 @@ public interface DashboardService {
             Integer userId
     );
 
-    List<Guest> getRecentGuests();
+//    List<Guest> getRecentGuests();
 
-    List<Expense> getRecentExpenses();
+    List<Guest> getRecentGuests(Long userId);
+
+//    List<Expense> getRecentExpenses();
+
+    List<Expense> getRecentExpenses(Long userId);
 }
