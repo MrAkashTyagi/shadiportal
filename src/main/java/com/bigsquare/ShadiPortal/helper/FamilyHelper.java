@@ -16,9 +16,7 @@ import java.util.List;
 public class FamilyHelper {
 
     public static String[] HEADERS = {
-//            "id",
-            "name"
-
+            "familyName"
     };
 
     public static String SHEET_NAME = "FAMILY_DETAILS";
@@ -43,8 +41,15 @@ public class FamilyHelper {
             int rowIndex = 1;
             for (Family family : familyList) {
                 Row dataRow = sheet.createRow(rowIndex++);
-                dataRow.createCell(0).setCellValue(family.getId());
-                dataRow.createCell(1).setCellValue(family.getFamilyName());
+//                dataRow.createCell(0).setCellValue(family.getId());
+//                dataRow.createCell(1).setCellValue(family.getFamilyName());
+
+                dataRow.createCell(0)
+                        .setCellValue(
+                                family.getFamilyName()
+                        );
+
+
                 System.out.println(family.getFamilyName());
 
             }
