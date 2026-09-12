@@ -37,22 +37,21 @@ public class DashboardController {
     }
 
     @GetMapping("/recent-guests")
-    public ResponseEntity<List<Guest>>
-    getRecentGuests() {
+    public ResponseEntity<List<Guest>> getRecentGuests(
+            @RequestParam Long userId) {
 
         return ResponseEntity.ok(
-                dashboardService.getRecentGuests()
+                dashboardService.getRecentGuests(userId)
         );
-
     }
 
     @GetMapping("/recent-expenses")
     public ResponseEntity<List<Expense>>
-    getRecentExpenses() {
+    getRecentExpenses(
+            @RequestParam Long userId) {
 
         return ResponseEntity.ok(
-                dashboardService.getRecentExpenses()
+                dashboardService.getRecentExpenses(userId)
         );
-
     }
 }
