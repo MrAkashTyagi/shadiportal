@@ -72,15 +72,40 @@ public class FamilyDataDumpServiceImpl {
         }
     }
 
-    public List<Family> getAllGuests(){
-        return this.familyRepo.findAll();
+//    public List<Family> getAllGuests(){
+//        return this.familyRepo.findAllByUserId(
+//                userId
+//        );
+//    }
+
+    public List<Family> getAllFamilies(
+            Integer userId
+    ){
+
+        return familyRepo.findAllByUserId(
+                userId
+        );
     }
 
-    public ByteArrayInputStream getActualData() throws IOException {
-        List<Family> familyList = this.familyRepo.findAll();
-        System.out.println(familyList);
-        ByteArrayInputStream stream = FamilyHelper.dataToExcel(familyList);
-        return stream;
+    public ByteArrayInputStream getActualData(
+            Integer userId
+    ) throws IOException {
+
+        if (userId == null) {
+
+            throw new IllegalArgumentException(
+                    "User id is required"
+            );
+        }
+
+        List<Family> familyList =
+                familyRepo.findAllByUserId(
+                        userId
+                );
+
+        return FamilyHelper.dataToExcel(
+                familyList
+        );
     }
 
 }
