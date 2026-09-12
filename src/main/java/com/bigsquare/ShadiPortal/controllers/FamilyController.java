@@ -83,8 +83,10 @@ public class FamilyController {
 
     // get all for dropdown
     @GetMapping("/getAll")
-    public List<Family> getAllFamilies() {
-        return familyService.getAllFamilies();
+    public List<Family> getAllFamilies(
+            @RequestParam Long userId) {
+
+        return familyService.getAllFamilies(userId);
     }
 
     @GetMapping("/summary")
