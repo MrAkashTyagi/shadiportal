@@ -49,25 +49,48 @@ public class FamilyDataDumpController {
     }
 
     @GetMapping("/family")
-    public List<Family> getAllProducts(){
-        return this.familyDataDumpService.getAllGuests();
+    public List<Family> getAllProducts(
+            @RequestParam Integer userId
+    ){
+
+        return familyDataDumpService
+                .getAllFamilies(
+                        userId
+                );
     }
 
+    @GetMapping("/download")
+    public ResponseEntity<Resource> downloadExcel(
+            @RequestParam Integer userId
+    ) throws IOException {
 
-    @RequestMapping("/download")
-    public ResponseEntity<Resource> downloadExcel() throws IOException {
+        String fileName =
+                "families.xlsx";
 
-        String fileName = "family.xlsx";
-        ByteArrayInputStream actualData = this.familyDataDumpService.getActualData();
-        InputStreamResource file = new InputStreamResource(actualData);
-        ResponseEntity<Resource> body = ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,"attachment; fileName"+fileName)
-                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+        ByteArrayInputStream actualData =
+                familyDataDumpService.getActualData(
+                        userId
+                );
+
+        InputStreamResource file =
+                new InputStreamResource(
+                        actualData
+                );
+
+        return ResponseEntity.ok()
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\""
+                                + fileName
+                                + "\""
+                )
+                .contentType(
+                        MediaType.parseMediaType(
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        )
+                )
                 .body(file);
-
-        return body;
     }
-
 
 
 }
