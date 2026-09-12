@@ -68,6 +68,10 @@ public interface FamilyRepo extends JpaRepository<Family, Integer> {
             Pageable pageable
     );
 
+    List<Family> findAllByUserId(
+            Integer userId
+    );
+
     long countByUserId(
             Integer userId
     );
