@@ -43,11 +43,25 @@ public class GuestDataDumpServiceImpl {
         return this.guestRepo.findAll();
     }
 
-    public ByteArrayInputStream getActualData() throws IOException {
-        List<Guest> guestList = this.guestRepo.findAll();
-        System.out.println(guestList);
-        ByteArrayInputStream stream = GuestHelper.dataToExcel(guestList);
-        return stream;
+    public ByteArrayInputStream getActualData(
+            Integer userId
+    ) throws IOException {
+
+        if (userId == null) {
+
+            throw new IllegalArgumentException(
+                    "User id is required"
+            );
+        }
+
+        List<Guest> guestList =
+                guestRepo.findByUserId(
+                        userId
+                );
+
+        return GuestHelper.dataToExcel(
+                guestList
+        );
     }
 
     public void save(
