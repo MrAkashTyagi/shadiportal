@@ -103,26 +103,35 @@ public class DashboardServiceImpl implements DashboardService {
 
     }
 
+//    @Override
+//    public List<Guest> getRecentGuests() {
+//
+//        return guestRepo
+//                .findAllByOrderByIdDesc(
+//                        PageRequest.of(0, 5)
+//                )
+//                .getContent();
+//
+//    }
+
     @Override
-    public List<Guest> getRecentGuests() {
+    public List<Guest> getRecentGuests(Long userId) {
 
         return guestRepo
-                .findAllByOrderByIdDesc(
-                        PageRequest.of(0, 5)
-                )
+                .findByUserIdOrderByIdDesc(
+                        userId,
+                        PageRequest.of(0, 5))
                 .getContent();
-
     }
 
     @Override
-    public List<Expense> getRecentExpenses() {
+    public List<Expense> getRecentExpenses(Long userId) {
 
         return expenseRepo
-                .findAllByOrderByIdDesc(
-                        PageRequest.of(0, 5)
-                )
+                .findByUserIdOrderByIdDesc(
+                        userId,
+                        PageRequest.of(0, 5))
                 .getContent();
-
     }
 
 }
