@@ -43,16 +43,36 @@ public class GuestDataDumpController {
         return this.guestDataDumpService.getAllGuests();
     }
 
-    @RequestMapping("/download")
-    public ResponseEntity<Resource> downloadExcel() throws IOException {
+    @GetMapping("/download")
+    public ResponseEntity<Resource> downloadExcel(
+            @RequestParam Integer userId
+    ) throws IOException {
 
-        String fileName = "products.xlsx";
-        ByteArrayInputStream actualData = this.guestDataDumpService.getActualData();
-        InputStreamResource file = new InputStreamResource(actualData);
-        ResponseEntity<Resource> body = ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; fileName" + fileName)
-                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+        String fileName =
+                "guests.xlsx";
+
+        ByteArrayInputStream actualData =
+                guestDataDumpService.getActualData(
+                        userId
+                );
+
+        InputStreamResource file =
+                new InputStreamResource(
+                        actualData
+                );
+
+        return ResponseEntity.ok()
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\""
+                                + fileName
+                                + "\""
+                )
+                .contentType(
+                        MediaType.parseMediaType(
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        )
+                )
                 .body(file);
-        return body;
     }
 }
