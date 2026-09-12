@@ -11,7 +11,9 @@ public interface FamilyService {
 
     public Family createFamily(FamilyRequest request);
 
-    public List<Family> getAllFamilies();
+//    public List<Family> getAllFamilies();
+
+    List<Family> getAllFamilies(Long userId);
 
     public Family updateFamily(Integer id, FamilyRequest request);
 
