@@ -94,38 +94,6 @@ public class FamilyServiceImpl implements FamilyService {
         return familyRepo.findByUserId(userId);
     }
 
-//    @Override
-//    public Family updateFamily(Integer id, Family family) {
-//
-//
-//        Family existingFamily = this.familyRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Family with given id is not pressent !!"));
-//        System.out.println("existing family is : " + existingFamily);
-//
-//        Optional<Family> duplicateFamily = this.familyRepo.findByFamilyName(family.getFamilyName());
-//        if (duplicateFamily.isPresent() && !duplicateFamily.get().getId().equals(id)) {
-//            throw new IllegalArgumentException("Family with this name already exists !!");
-//        }
-//
-//        existingFamily.setFamilyName(family.getFamilyName());
-//
-////        List<Family> familyList = this.familyRepo.findAll();
-////        Family family1 = familyList.stream().filter(f -> f.getFamilyName() != existingFamily.getFamilyName()).findAny().get();
-////        System.out.println(family1);
-//
-
-    /// /        for (Family family1 : familyList){
-    /// /            System.out.println("inside loop");
-    /// /            System.out.println("Family list wala name :"+family1.getFamilyName());
-    /// /            System.out.println("Family wala name jo ui se aa rha h : "+family.getFamilyName());
-    /// /
-    /// /            if (family1.getId() != id && family1.getFamilyName() == family.getFamilyName()){
-    /// /                System.out.println("inside if of loop");
-    /// /                throw new IllegalArgumentException("Family with this name already exists !!");
-    /// /            }
-    /// /        }
-//        return this.familyRepo.save(existingFamily);
-//
-//    }
     @Override
     public Family updateFamily(
             Integer id,
