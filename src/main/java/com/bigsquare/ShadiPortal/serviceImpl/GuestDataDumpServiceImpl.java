@@ -103,7 +103,7 @@ public class GuestDataDumpServiceImpl {
 
                     Family family =
                             familyRepo
-                                    .findByFamilyNameIgnoreCaseAndUserId(
+                                    .findFirstByFamilyNameIgnoreCaseAndUserIdOrderByIdAsc(
                                             familyName,
                                             userId
                                     )
