@@ -5,16 +5,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface FamilyRepo extends JpaRepository<Family, Integer> {
-    Optional<Family> findByFamilyName(String familyName);
 
-    public Optional<Family> findByFamilyNameIgnoreCase(String familyName);
+
+//    Optional<Family> findByFamilyName(String familyName);
+
+//    public Optional<Family> findByFamilyNameIgnoreCase(String familyName);
 
 
     @Query("""
@@ -63,6 +64,12 @@ public interface FamilyRepo extends JpaRepository<Family, Integer> {
             Integer userId
     );
 
+    Optional<Family>
+    findFirstByFamilyNameIgnoreCaseAndUserIdOrderByIdAsc(
+            String familyName,
+            Integer userId
+    );
+
     Page<Family> findAllByUserId(
             Integer userId,
             Pageable pageable
@@ -88,6 +95,4 @@ public interface FamilyRepo extends JpaRepository<Family, Integer> {
 
     List<Family> findByUserId(Long userId);
 
-
-//    Page<Guest> findBySearchQuery(@Param("search") String search, Pageable pageable);
 }
