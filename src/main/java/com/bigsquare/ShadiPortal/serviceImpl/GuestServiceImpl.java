@@ -1,5 +1,6 @@
 package com.bigsquare.ShadiPortal.serviceImpl;
 
+import com.bigsquare.ShadiPortal.dto.GiftSummaryDto;
 import com.bigsquare.ShadiPortal.dto.GuestCategorySummaryDto;
 import com.bigsquare.ShadiPortal.dto.GuestSummaryDto;
 import com.bigsquare.ShadiPortal.entities.Family;
@@ -22,7 +23,9 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 @Service
 public class GuestServiceImpl implements GuestService {
@@ -35,23 +38,6 @@ public class GuestServiceImpl implements GuestService {
 
     @Autowired
     GuestRepo guestRepo;
-
-//    public Guest createGuest(Guest guest) {
-//        if (guest.getFamily() != null && guest.getFamily().getFamilyName() != null) {
-//            String inputFamilyName = guest.getFamily().getFamilyName().trim();
-//            Optional<Family> existingFamily = familyRepo.findByFamilyNameIgnoreCase(inputFamilyName);
-//            if (existingFamily.isPresent()) {
-//                guest.setFamily(existingFamily.get());
-//            } else {
-//                guest.getFamily().setFamilyName(inputFamilyName);
-//            }
-//
-//            // Family existingFamily = familyRepo.findById(guest.getFamily().getId()).orElseThrow(() -> new EntityNotFoundException("Family not found"));
-//            //guest.setFamily(existingFamily);
-//        }
-//
-//        return this.guestRepo.save(guest);
-//    }
 
     @Override
     public Guest createGuest(
@@ -174,7 +160,20 @@ public class GuestServiceImpl implements GuestService {
                 String inputFamilyName = guest.getFamily().getFamilyName().trim();
 
                 // Database me same name ka parivar dhoondenge (Unique and Duplicate check)
-                Optional<Family> dbFamily = this.familyRepo.findByFamilyName(inputFamilyName);
+//                Optional<Family> dbFamily = this.familyRepo.findByFamilyName(inputFamilyName);
+
+                Integer userId =
+                        existingGuest
+                                .getUser()
+                                .getId();
+
+                Optional<Family> dbFamily =
+                        this.familyRepo
+                                .findByFamilyNameIgnoreCaseAndUserId(
+                                        inputFamilyName,
+                                        userId
+                                );
+
 
                 if (dbFamily.isPresent()) {
                     existingGuest.setFamily(dbFamily.get()); // Purane se link kar do
@@ -377,6 +376,65 @@ public class GuestServiceImpl implements GuestService {
                 userId
         );
 
+    }
+
+    @Override
+    public List<GiftSummaryDto> getGiftSummary(
+            Integer userId
+    ) {
+
+        List<Guest> guests =
+                guestRepo.findAllByUserId(
+                        userId
+                );
+
+        Map<String, Long> giftCounts =
+                new TreeMap<>(
+                        String.CASE_INSENSITIVE_ORDER
+                );
+
+        for (Guest guest : guests) {
+
+            String giftValue =
+                    guest.getGift();
+
+            if (
+                    giftValue == null ||
+                            giftValue.isBlank()
+            ) {
+                continue;
+            }
+
+            String[] gifts =
+                    giftValue.split(",");
+
+            for (String gift : gifts) {
+
+                String normalizedGift =
+                        gift.trim();
+
+                if (normalizedGift.isBlank()) {
+                    continue;
+                }
+
+                giftCounts.merge(
+                        normalizedGift,
+                        1L,
+                        Long::sum
+                );
+            }
+        }
+
+        return giftCounts
+                .entrySet()
+                .stream()
+                .map(entry ->
+                        new GiftSummaryDto(
+                                entry.getKey(),
+                                entry.getValue()
+                        )
+                )
+                .toList();
     }
 
 }
