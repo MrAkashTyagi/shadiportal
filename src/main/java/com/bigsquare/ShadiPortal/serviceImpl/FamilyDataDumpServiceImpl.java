@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -22,18 +23,6 @@ public class FamilyDataDumpServiceImpl {
 
     @Autowired
     private UserRepo userRepo;
-
-    //saving data from excel to db
-//    public void save(MultipartFile file, Integer userId){
-//
-//        try {
-//            List<Family> families= FamilyHelper.convertExcelToListOfFamilies(file.getInputStream());
-//            this.familyRepo.saveAll(families);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//
-//    }
 
     public void save(
             MultipartFile file,
@@ -54,16 +43,42 @@ public class FamilyDataDumpServiceImpl {
                     FamilyHelper.convertExcelToListOfFamilies(
                             file.getInputStream()
                     );
+            List<Family> familiesToSave =
+                    new ArrayList<>();
 
             for (Family family : families) {
 
-                family.setId(null);
+                String familyName =
+                        family.getFamilyName()
+                                .trim()
+                                .replaceAll("\\s+", " ");
 
-                family.setUser(user);
+                boolean exists =
+                        familyRepo
+                                .findByFamilyNameIgnoreCaseAndUserId(
+                                        familyName,
+                                        userId
+                                )
+                                .isPresent();
+
+                if (!exists) {
+
+                    family.setId(null);
+
+                    family.setFamilyName(
+                            familyName
+                    );
+
+                    family.setUser(user);
+
+                    familiesToSave.add(
+                            family
+                    );
+                }
             }
 
             this.familyRepo.saveAll(
-                    families
+                    familiesToSave
             );
 
         } catch (IOException e) {
@@ -80,7 +95,7 @@ public class FamilyDataDumpServiceImpl {
 
     public List<Family> getAllFamilies(
             Integer userId
-    ){
+    ) {
 
         return familyRepo.findAllByUserId(
                 userId
