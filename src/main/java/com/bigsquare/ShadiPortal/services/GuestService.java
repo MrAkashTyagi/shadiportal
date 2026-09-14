@@ -1,5 +1,6 @@
 package com.bigsquare.ShadiPortal.services;
 
+import com.bigsquare.ShadiPortal.dto.GiftSummaryDto;
 import com.bigsquare.ShadiPortal.dto.GuestCategorySummaryDto;
 import com.bigsquare.ShadiPortal.dto.GuestSummaryDto;
 import com.bigsquare.ShadiPortal.entities.Guest;
@@ -58,4 +59,8 @@ public interface GuestService {
     GuestSummaryDto getGuestSummary( Integer userId);
 
     List<GuestCategorySummaryDto> getGuestCategorySummary();
+
+    List<GiftSummaryDto> getGiftSummary(
+            Integer userId
+    );
 }
