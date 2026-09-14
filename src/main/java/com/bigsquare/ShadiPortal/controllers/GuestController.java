@@ -1,5 +1,6 @@
 package com.bigsquare.ShadiPortal.controllers;
 
+import com.bigsquare.ShadiPortal.dto.GiftSummaryDto;
 import com.bigsquare.ShadiPortal.dto.GuestCategorySummaryDto;
 import com.bigsquare.ShadiPortal.dto.GuestSummaryDto;
 import com.bigsquare.ShadiPortal.entities.Guest;
@@ -259,6 +260,19 @@ public class GuestController {
                 .getGuestsByUserId(
                         userId
                 );
+    }
+
+    @GetMapping("/gift-summary")
+    public ResponseEntity<List<GiftSummaryDto>>
+    getGiftSummary(
+            @RequestParam Integer userId
+    ) {
+
+        return ResponseEntity.ok(
+                guestService.getGiftSummary(
+                        userId
+                )
+        );
     }
 
 }
