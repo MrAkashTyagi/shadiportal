@@ -47,11 +47,11 @@ public interface GuestRepo extends JpaRepository<Guest, Integer> {
                             :guestCategory = ''
                             OR LOWER(g.guestCategory) = LOWER(:guestCategory)
                         )
-                                AND
-                        (
-                            :gift = ''
-                            OR LOWER(g.gift) = LOWER(:gift)
-                        )
+                         AND (
+                             :gift = ''
+                             OR LOWER(g.gift) LIKE LOWER(CONCAT('%', :gift, '%'))
+                         )
+                        
                                          AND
                         (
                             :stay = ''
@@ -123,8 +123,9 @@ public interface GuestRepo extends JpaRepository<Guest, Integer> {
 
             AND (
                 :gift = ''
-                OR LOWER(g.gift) = LOWER(:gift)
+                OR LOWER(g.gift) LIKE LOWER(CONCAT('%', :gift, '%'))
             )
+          
 
             AND (
                 :stay = ''
@@ -254,5 +255,7 @@ public interface GuestRepo extends JpaRepository<Guest, Integer> {
             Integer userId,
             String stay
     );
+
+
 
 }
