@@ -99,8 +99,8 @@ public class GuestDataDumpServiceImpl {
                     String familyName =
                             guest.getFamily()
                                     .getFamilyName()
-                                    .trim();
-
+                                    .trim()
+                                    .replaceAll("\\s+", " ");
                     Family family =
                             familyRepo
                                     .findFirstByFamilyNameIgnoreCaseAndUserIdOrderByIdAsc(
