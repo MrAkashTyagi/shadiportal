@@ -5,6 +5,7 @@ import com.bigsquare.ShadiPortal.dto.LoginResponseDto;
 import com.bigsquare.ShadiPortal.dto.RegisterRequest;
 import com.bigsquare.ShadiPortal.entities.User;
 import com.bigsquare.ShadiPortal.repositories.UserRepo;
+import com.bigsquare.ShadiPortal.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 //import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -25,6 +26,9 @@ public class AuthController {
 
     @Autowired
     private UserRepo userRepo;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
 //    register
 
@@ -134,6 +138,15 @@ public class AuthController {
 
         System.out.println("LOGIN SUCCESS");
 
+
+        String token =
+                jwtUtil.generateToken(
+                        user.getEmail()
+                );
+
+        System.out.println(
+                "JWT TOKEN = " + token
+        );
 
 
 
