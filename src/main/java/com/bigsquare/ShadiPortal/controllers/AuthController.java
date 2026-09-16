@@ -138,24 +138,19 @@ public class AuthController {
 
         System.out.println("LOGIN SUCCESS");
 
-
         String token =
                 jwtUtil.generateToken(
                         user.getEmail()
                 );
 
-        System.out.println(
-                "JWT TOKEN = " + token
-        );
-
-
-
         return ResponseEntity.ok(
 
                 new LoginResponseDto(
+                        token,
                         user.getId(),
                         user.getName(),
-                        user.getEmail()
+                        user.getEmail(),
+                        user.getRole()
                 )
 
         );
