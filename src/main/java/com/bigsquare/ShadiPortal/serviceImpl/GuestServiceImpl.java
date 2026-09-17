@@ -10,6 +10,7 @@ import com.bigsquare.ShadiPortal.helper.GuestHelper;
 import com.bigsquare.ShadiPortal.repositories.FamilyRepo;
 import com.bigsquare.ShadiPortal.repositories.GuestRepo;
 import com.bigsquare.ShadiPortal.repositories.UserRepo;
+import com.bigsquare.ShadiPortal.security.CurrentUserService;
 import com.bigsquare.ShadiPortal.services.GuestService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,11 +40,17 @@ public class GuestServiceImpl implements GuestService {
     @Autowired
     GuestRepo guestRepo;
 
+    @Autowired
+    private CurrentUserService currentUserService;
+
     @Override
     public Guest createGuest(
-            Guest guest,
-            Integer userId
+            Guest guest
     ) {
+
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
 
         if (userId == null) {
             throw new IllegalArgumentException(
@@ -192,22 +199,40 @@ public class GuestServiceImpl implements GuestService {
     }
 
     @Override
-    public Page<Guest> getGuestWithPagination(Integer userId,
-                                              int page,
-                                              int size,
-                                              String search,
-                                              String gender,
-                                              String adultOrchild,
-                                              String gift,
-                                              String cash,
-                                              String guestCategory,
-                                              String stay,
-                                              Boolean invitationSent) {
+    public Page<Guest> getGuestWithPagination(
+
+            int page,
+
+            int size,
+
+            String search,
+
+            String gender,
+
+            String adultOrchild,
+
+            String gift,
+
+            String cash,
+
+            String guestCategory,
+
+            String stay,
+
+            Boolean invitationSent
+    ) {
+
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
+
         Pageable pageable =
                 PageRequest.of(
                         page,
                         size,
-                        Sort.by("id").ascending());
+                        Sort.by("id")
+                                .ascending()
+                );
 
         String searchValue = search == null ? "" : search.trim();
 
@@ -245,11 +270,6 @@ public class GuestServiceImpl implements GuestService {
         );
     }
 
-//    @Override
-//    public Guest createGuest(Guest guest) {
-//        return this.guestRepo.save(guest);
-//    }
-
     public ByteArrayInputStream getActualData(
             Integer userId
     ) throws IOException {
@@ -266,7 +286,6 @@ public class GuestServiceImpl implements GuestService {
 
     @Override
     public ByteArrayInputStream getFilteredActualData(
-            Integer userId,
             String search,
             String gender,
             String adultOrchild,
@@ -275,7 +294,12 @@ public class GuestServiceImpl implements GuestService {
             String guestCategory,
             String stay,
             Boolean invitationSent
-    ) throws IOException {
+    )
+            throws IOException {
+
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
 
         if (userId == null) {
 
@@ -338,8 +362,12 @@ public class GuestServiceImpl implements GuestService {
     }
     @Override
     public GuestSummaryDto getGuestSummary(
-            Integer userId
+
     ) {
+
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
 
         return new GuestSummaryDto(
 
@@ -380,8 +408,12 @@ public class GuestServiceImpl implements GuestService {
 
     @Override
     public List<GiftSummaryDto> getGiftSummary(
-            Integer userId
+
     ) {
+
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
 
         List<Guest> guests =
                 guestRepo.findAllByUserId(
