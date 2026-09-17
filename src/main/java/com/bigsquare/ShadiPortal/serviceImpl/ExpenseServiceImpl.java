@@ -6,6 +6,7 @@ import com.bigsquare.ShadiPortal.entities.Expense;
 import com.bigsquare.ShadiPortal.entities.User;
 import com.bigsquare.ShadiPortal.repositories.ExpenseRepo;
 import com.bigsquare.ShadiPortal.repositories.UserRepo;
+import com.bigsquare.ShadiPortal.security.CurrentUserService;
 import com.bigsquare.ShadiPortal.services.ExpenseService;
 import jakarta.persistence.EntityNotFoundException;
 import org.apache.poi.ss.usermodel.Row;
@@ -39,70 +40,20 @@ public class ExpenseServiceImpl implements ExpenseService {
     @Autowired
     private UserRepo userRepo;
 
+    @Autowired
+    private CurrentUserService currentUserService;
 
-//    @Override
-//    public Expense createExpense(
-//            Expense expense,
-//            MultipartFile bill
-//    ) {
-//
-//        if (
-//                expense.getPaidAmount() != null &&
-//                        expense.getTotalAmount() != null &&
-//                        expense.getPaidAmount().compareTo(
-//                                expense.getTotalAmount()
-//                        ) > 0
-//        ) {
-//            throw new RuntimeException(
-//                    "Paid Amount cannot be greater than Total Amount"
-//            );
-//        }
-//
-//        try {
-//
-//            if (bill != null && !bill.isEmpty()) {
-//
-//                String fileName =
-//                        bill.getOriginalFilename();
-//
-//                Path uploadPath =
-//                        Paths.get("uploads/bills");
-//
-//                Files.createDirectories(uploadPath);
-//
-//                Path filePath =
-//                        uploadPath.resolve(fileName);
-//
-//                bill.transferTo(filePath);
-//
-//                expense.setBillPath(
-//                        filePath.toString()
-//                );
-//            }
-//
-//
-//            return expenseRepo.save(expense);
-//
-//        } catch (IOException e) {
-//
-//            throw new RuntimeException("Error uploading bill", e);
-//
-//        }
-//    }
 
     @Override
     public Expense createExpense(
             Expense expense,
-            MultipartFile bill,
-            Integer userId
+            MultipartFile bill
     ) {
 
-        if (userId == null) {
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
 
-            throw new IllegalArgumentException(
-                    "User id is required"
-            );
-        }
 
         User user =
                 userRepo.findById(userId)
@@ -301,12 +252,15 @@ public class ExpenseServiceImpl implements ExpenseService {
 
     @Override
     public Page<Expense> getPaginatedExpenses(
-            Integer userId,
             int page,
             int size,
             String search,
             String category
     ) {
+
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
 
         Pageable pageable =
                 PageRequest.of(
@@ -369,16 +323,11 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     @Override
-    public byte[] exportExpenses(
-            Integer userId
-    ) {
+    public byte[] exportExpenses() {
 
-        if (userId == null) {
-
-            throw new IllegalArgumentException(
-                    "User id is required"
-            );
-        }
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
 
         List<Expense> expenses =
                 expenseRepo.findAllByUserId(
@@ -540,9 +489,11 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     @Override
-    public ExpenseSummaryDto getExpenseSummary(Integer userId) {
+    public ExpenseSummaryDto getExpenseSummary() {
 
-//        List<Expense> expenses = expenseRepo.findAll();
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
 
         List<Expense> expenses =
                 expenseRepo.findAllByUserId(
