@@ -13,7 +13,7 @@ public interface FamilyService {
 
 //    public List<Family> getAllFamilies();
 
-    List<Family> getAllFamilies(Long userId);
+    List<Family> getAllFamilies();
 
     public Family updateFamily(Integer id, FamilyRequest request);
 
@@ -21,7 +21,7 @@ public interface FamilyService {
 
     public void deleteFamily(Integer id);
 
-    Page<Family> getPaginatedFamilyResult(Integer userId, int page, int size, String search);
+    Page<Family> getPaginatedFamilyResult(int page, int size, String search);
 
     FamilySummaryDto getFamilySummary();
 
