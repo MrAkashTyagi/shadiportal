@@ -8,15 +8,9 @@ import java.util.List;
 
 public interface DashboardService {
 
-    DashboardSummaryDto getDashboardSummary(
-            Integer userId
-    );
+    DashboardSummaryDto getDashboardSummary();
 
-//    List<Guest> getRecentGuests();
+    List<Guest> getRecentGuests();
 
-    List<Guest> getRecentGuests(Long userId);
-
-//    List<Expense> getRecentExpenses();
-
-    List<Expense> getRecentExpenses(Long userId);
+    List<Expense> getRecentExpenses();
 }
