@@ -6,58 +6,71 @@ import com.bigsquare.ShadiPortal.entities.Guest;
 import com.bigsquare.ShadiPortal.repositories.ExpenseRepo;
 import com.bigsquare.ShadiPortal.repositories.FamilyRepo;
 import com.bigsquare.ShadiPortal.repositories.GuestRepo;
+import com.bigsquare.ShadiPortal.security.CurrentUserService;
 import com.bigsquare.ShadiPortal.services.DashboardService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-public class DashboardServiceImpl implements DashboardService {
+public class DashboardServiceImpl
+        implements DashboardService {
 
+    private final GuestRepo guestRepo;
 
-    @Autowired
-    private GuestRepo guestRepo;
+    private final FamilyRepo familyRepo;
 
-    @Autowired
-    private FamilyRepo familyRepo;
+    private final ExpenseRepo expenseRepo;
 
-    @Autowired
-    private ExpenseRepo expenseRepo;
+    private final CurrentUserService currentUserService;
 
-    @Override
-    public DashboardSummaryDto getDashboardSummary(
-            Integer userId
+    public DashboardServiceImpl(
+            GuestRepo guestRepo,
+            FamilyRepo familyRepo,
+            ExpenseRepo expenseRepo,
+            CurrentUserService currentUserService
     ) {
 
+        this.guestRepo = guestRepo;
+        this.familyRepo = familyRepo;
+        this.expenseRepo = expenseRepo;
+        this.currentUserService = currentUserService;
+    }
+
+    @Override
+    public DashboardSummaryDto getDashboardSummary() {
+
+        Integer userId =
+                currentUserService.getCurrentUserId();
+
         Long totalGuests =
-                guestRepo.countByUserId(userId);
+                guestRepo.countByUserId(
+                        userId
+                );
 
         Long totalFamilies =
-                familyRepo.countByUserId(userId);
+                familyRepo.countByUserId(
+                        userId
+                );
 
         Long totalFamilyMembers =
-                familyRepo.getTotalFamilyMembersByUserId(
-                        userId
-                );
+                familyRepo
+                        .getTotalFamilyMembersByUserId(
+                                userId
+                        );
 
-        Double averageFamilySize =
+        double averageFamilySize =
                 totalFamilies > 0
-                        ? (double) totalFamilyMembers / totalFamilies
+                        ? (double) totalFamilyMembers
+                          / totalFamilies
                         : 0.0;
 
-//        Long invitationSent =
-//                guestRepo.countByInvitationSentTrue();
-
         Long invitationSent =
-                guestRepo.countByUserIdAndInvitationSentTrue(
-                        userId
-                );
-
-
-//        Long pendingInvitations =
-//                guestRepo.countPendingInvitationsByUserId(userId);
+                guestRepo
+                        .countByUserIdAndInvitationSentTrue(
+                                userId
+                        );
 
         Long pendingInvitations =
                 totalGuests - invitationSent;
@@ -80,58 +93,68 @@ public class DashboardServiceImpl implements DashboardService {
                                 userId
                         );
 
+        /*
+         * Null-safe handling in case aggregate queries
+         * return null when the user has no expenses.
+         */
+        totalExpense =
+                totalExpense != null
+                        ? totalExpense
+                        : 0.0;
+
+        totalPaidExpense =
+                totalPaidExpense != null
+                        ? totalPaidExpense
+                        : 0.0;
+
         Double totalPendingExpense =
                 totalExpense - totalPaidExpense;
 
         return new DashboardSummaryDto(
-
                 totalGuests,
                 totalFamilies,
                 totalFamilyMembers,
-
                 averageFamilySize,
-
                 totalExpense,
                 totalPaidExpense,
                 totalPendingExpense,
-
                 stayRequired,
                 invitationSent,
                 pendingInvitations
-
         );
-
     }
 
-//    @Override
-//    public List<Guest> getRecentGuests() {
-//
-//        return guestRepo
-//                .findAllByOrderByIdDesc(
-//                        PageRequest.of(0, 5)
-//                )
-//                .getContent();
-//
-//    }
-
     @Override
-    public List<Guest> getRecentGuests(Long userId) {
+    public List<Guest> getRecentGuests() {
+
+        Integer userId =
+                currentUserService.getCurrentUserId();
 
         return guestRepo
                 .findByUserIdOrderByIdDesc(
-                        userId,
-                        PageRequest.of(0, 5))
+                        userId.longValue(),
+                        PageRequest.of(
+                                0,
+                                5
+                        )
+                )
                 .getContent();
     }
 
     @Override
-    public List<Expense> getRecentExpenses(Long userId) {
+    public List<Expense> getRecentExpenses() {
+
+        Integer userId =
+                currentUserService.getCurrentUserId();
 
         return expenseRepo
                 .findByUserIdOrderByIdDesc(
-                        userId,
-                        PageRequest.of(0, 5))
+                        userId.longValue(),
+                        PageRequest.of(
+                                0,
+                                5
+                        )
+                )
                 .getContent();
     }
-
 }
