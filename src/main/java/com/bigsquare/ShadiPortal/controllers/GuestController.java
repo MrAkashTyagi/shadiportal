@@ -33,21 +33,31 @@ public class GuestController {
     // get guests as per pagination
     @GetMapping("/guest")
     public Page<Guest> getAllGuests(
-            @RequestParam Integer userId,
+
             @RequestParam(defaultValue = "0") int page,
+
             @RequestParam(defaultValue = "10") int size,
+
             @RequestParam(required = false, defaultValue = "") String search,
+
             @RequestParam(required = false, defaultValue = "") String gender,
+
             @RequestParam(required = false, defaultValue = "") String adultOrchild,
+
             @RequestParam(required = false, defaultValue = "") String gift,
+
             @RequestParam(required = false, defaultValue = "") String cash,
+
             @RequestParam(required = false, defaultValue = "") String guestCategory,
+
             @RequestParam(required = false, defaultValue = "") String stay,
+
             @RequestParam(required = false, defaultValue = "") Boolean invitationSent
 
     ) {
+
         return this.guestService.getGuestWithPagination(
-                userId,
+
                 page,
                 size,
                 search,
@@ -60,7 +70,6 @@ public class GuestController {
                 invitationSent
         );
     }
-
     @RequestMapping(value = "/getAllGuests", method = RequestMethod.GET)
     public List<Guest> getAllGuests() {
         return this.guestService.getAllGuests();
@@ -68,24 +77,15 @@ public class GuestController {
 
 //    create Guests
 
-//    @PostMapping
-//    public Guest createGuest(@RequestBody Guest guest) {
-//        Guest guest1 = this.guestService.createGuest(guest);
-//        return guest1;
-//    }
-
     @PostMapping
     public Guest createGuest(
-            @RequestBody Guest guest,
-            @RequestParam Integer userId
+            @RequestBody Guest guest
     ) {
 
         return guestService.createGuest(
-                guest,
-                userId
+                guest
         );
     }
-
 //    get guest by id
 
     @GetMapping("/{id}")
@@ -143,8 +143,6 @@ public class GuestController {
     @GetMapping("/download")
     public ResponseEntity<Resource> downloadExcel(
 
-            @RequestParam Integer userId,
-
             @RequestParam(
                     required = false,
                     defaultValue = ""
@@ -196,7 +194,6 @@ public class GuestController {
 
         ByteArrayInputStream actualData =
                 guestService.getFilteredActualData(
-                        userId,
                         search,
                         gender,
                         adultOrchild,
@@ -232,12 +229,9 @@ public class GuestController {
     @GetMapping("/summary")
     public GuestSummaryDto getGuestSummary(
 
-            @RequestParam Integer userId
-
     ) {
 
         return guestService.getGuestSummary(
-                userId
         );
 
     }
@@ -265,12 +259,12 @@ public class GuestController {
     @GetMapping("/gift-summary")
     public ResponseEntity<List<GiftSummaryDto>>
     getGiftSummary(
-            @RequestParam Integer userId
+
     ) {
 
         return ResponseEntity.ok(
                 guestService.getGiftSummary(
-                        userId
+
                 )
         );
     }
