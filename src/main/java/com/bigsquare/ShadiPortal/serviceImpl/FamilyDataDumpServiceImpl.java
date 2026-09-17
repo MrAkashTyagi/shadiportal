@@ -5,6 +5,7 @@ import com.bigsquare.ShadiPortal.entities.User;
 import com.bigsquare.ShadiPortal.helper.FamilyHelper;
 import com.bigsquare.ShadiPortal.repositories.FamilyRepo;
 import com.bigsquare.ShadiPortal.repositories.UserRepo;
+import com.bigsquare.ShadiPortal.security.CurrentUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,10 +25,16 @@ public class FamilyDataDumpServiceImpl {
     @Autowired
     private UserRepo userRepo;
 
+    @Autowired
+    private CurrentUserService currentUserService;
+
     public void save(
-            MultipartFile file,
-            Integer userId
+            MultipartFile file
     ) {
+
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
 
         try {
 
@@ -55,7 +62,7 @@ public class FamilyDataDumpServiceImpl {
 
                 boolean exists =
                         familyRepo
-                                .findByFamilyNameIgnoreCaseAndUserId(
+                                .findFirstByFamilyNameIgnoreCaseAndUserIdOrderByIdAsc(
                                         familyName,
                                         userId
                                 )
@@ -87,15 +94,12 @@ public class FamilyDataDumpServiceImpl {
         }
     }
 
-//    public List<Family> getAllGuests(){
-//        return this.familyRepo.findAllByUserId(
-//                userId
-//        );
-//    }
 
     public List<Family> getAllFamilies(
-            Integer userId
     ) {
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
 
         return familyRepo.findAllByUserId(
                 userId
@@ -103,15 +107,13 @@ public class FamilyDataDumpServiceImpl {
     }
 
     public ByteArrayInputStream getActualData(
-            Integer userId
+
     ) throws IOException {
 
-        if (userId == null) {
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
 
-            throw new IllegalArgumentException(
-                    "User id is required"
-            );
-        }
 
         List<Family> familyList =
                 familyRepo.findAllByUserId(
