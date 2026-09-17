@@ -36,7 +36,6 @@ public class FamilyController {
     @GetMapping
     public Page<Family> getFamilies(
 
-            @RequestParam Integer userId,
 
             @RequestParam(defaultValue = "0") int page,
 
@@ -46,7 +45,7 @@ public class FamilyController {
     ) {
 
         return familyService.getPaginatedFamilyResult(
-                userId,
+
                 page,
                 size,
                 search
@@ -83,11 +82,12 @@ public class FamilyController {
 
     // get all for dropdown
     @GetMapping("/getAll")
-    public List<Family> getAllFamilies(
-            @RequestParam Long userId) {
+    public List<Family> getAllFamilies() {
 
-        return familyService.getAllFamilies(userId);
+        return familyService.getAllFamilies();
+
     }
+
 
     @GetMapping("/summary")
     public ResponseEntity<FamilySummaryDto> getFamilySummary() {
