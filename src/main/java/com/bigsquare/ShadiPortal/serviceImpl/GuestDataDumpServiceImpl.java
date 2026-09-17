@@ -7,6 +7,7 @@ import com.bigsquare.ShadiPortal.helper.GuestHelper;
 import com.bigsquare.ShadiPortal.repositories.FamilyRepo;
 import com.bigsquare.ShadiPortal.repositories.GuestRepo;
 import com.bigsquare.ShadiPortal.repositories.UserRepo;
+import com.bigsquare.ShadiPortal.security.CurrentUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,32 +28,23 @@ public class GuestDataDumpServiceImpl {
     @Autowired
     private UserRepo userRepo;
 
+    @Autowired
+    private CurrentUserService currentUserService;
+
     //saving data from excel to db
-//    public void save(MultipartFile file) {
-//
-//        try {
-//            List<Guest> guests = GuestHelper.convertExcelToListOfGuests(file.getInputStream());
-//            this.guestRepo.saveAll(guests);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//
-//    }
+
 
     public List<Guest> getAllGuests() {
         return this.guestRepo.findAll();
     }
 
     public ByteArrayInputStream getActualData(
-            Integer userId
+
     ) throws IOException {
 
-        if (userId == null) {
-
-            throw new IllegalArgumentException(
-                    "User id is required"
-            );
-        }
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
 
         List<Guest> guestList =
                 guestRepo.findByUserId(
@@ -65,9 +57,11 @@ public class GuestDataDumpServiceImpl {
     }
 
     public void save(
-            MultipartFile file,
-            Integer userId
+            MultipartFile file
     ) {
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
 
         try {
 
