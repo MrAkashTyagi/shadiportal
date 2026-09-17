@@ -204,7 +204,7 @@ public class ExpenseHelper {
                         )
                 );
 
-                Cell dateCell = row.getCell(5);
+                Cell dateCell = row.getCell(6);
 
                 if (dateCell != null) {
 
@@ -230,20 +230,28 @@ public class ExpenseHelper {
                                     formatter.formatCellValue(
                                             dateCell
                                     );
-
                             if (!date.isBlank()) {
 
-                                DateTimeFormatter formatter1 =
-                                        DateTimeFormatter.ofPattern(
-                                                "M/d/yy"
-                                        );
+                                try {
 
-                                expense.setExpenseDate(
-                                        LocalDate.parse(
-                                                date,
-                                                formatter1
-                                        )
-                                );
+                                    expense.setExpenseDate(
+                                            LocalDate.parse(date)
+                                    );
+
+                                } catch (Exception ex) {
+
+                                    DateTimeFormatter formatter1 =
+                                            DateTimeFormatter.ofPattern(
+                                                    "M/d/yy"
+                                            );
+
+                                    expense.setExpenseDate(
+                                            LocalDate.parse(
+                                                    date,
+                                                    formatter1
+                                            )
+                                    );
+                                }
                             }
                         }
 
@@ -256,14 +264,17 @@ public class ExpenseHelper {
                     }
                 }
 
+
                 expense.setPaidBy(
                         formatter.formatCellValue(
-                                row.getCell(6)
+                                row.getCell(7)
                         )
                 );
 
                 expenses.add(expense);
+
             }
+
 
         } catch (Exception exception) {
 
