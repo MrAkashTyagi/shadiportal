@@ -30,14 +30,13 @@ public class FamilyDataDumpController {
 
     @PostMapping("/upload")
     public ResponseEntity<?> upload(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam Integer userId
+            @RequestParam("file") MultipartFile file
     ){
 
         if (FamilyHelper.checkExcelFormat(file)){
 
             //upload
-            this.familyDataDumpService.save(file, userId);
+            this.familyDataDumpService.save(file);
             return ResponseEntity.ok(Map.of("message", "File is uploaded successfully !! Data is saved to db !!"));
 
         }else {
@@ -49,28 +48,24 @@ public class FamilyDataDumpController {
     }
 
     @GetMapping("/family")
-    public List<Family> getAllProducts(
-            @RequestParam Integer userId
-    ){
+    public List<Family> getAllProducts(){
 
         return familyDataDumpService
                 .getAllFamilies(
-                        userId
+
                 );
     }
 
     @GetMapping("/download")
     public ResponseEntity<Resource> downloadExcel(
-            @RequestParam Integer userId
+
     ) throws IOException {
 
         String fileName =
                 "families.xlsx";
 
         ByteArrayInputStream actualData =
-                familyDataDumpService.getActualData(
-                        userId
-                );
+                familyDataDumpService.getActualData();
 
         InputStreamResource file =
                 new InputStreamResource(
