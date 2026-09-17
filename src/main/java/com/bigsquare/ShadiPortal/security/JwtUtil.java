@@ -1,15 +1,15 @@
 package com.bigsquare.ShadiPortal.security;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
-
 
 @Component
 public class JwtUtil {
@@ -23,9 +23,10 @@ public class JwtUtil {
     private SecretKey getSigningKey() {
 
         return Keys.hmacShaKeyFor(
-                secret.getBytes()
+                secret.getBytes(
+                        StandardCharsets.UTF_8
+                )
         );
-
     }
 
     public String generateToken(
@@ -34,9 +35,7 @@ public class JwtUtil {
 
         return Jwts.builder()
                 .subject(email)
-                .issuedAt(
-                        new Date()
-                )
+                .issuedAt(new Date())
                 .expiration(
                         new Date(
                                 System.currentTimeMillis()
@@ -47,26 +46,65 @@ public class JwtUtil {
                         getSigningKey()
                 )
                 .compact();
-
     }
 
     public String extractEmail(
             String token
     ) {
 
-        Claims claims =
-                Jwts.parser()
-                        .verifyWith(
-                                getSigningKey()
-                        )
-                        .build()
-                        .parseSignedClaims(
-                                token
-                        )
-                        .getPayload();
-
-        return claims.getSubject();
-
+        return extractAllClaims(
+                token
+        ).getSubject();
     }
 
+    public boolean validateToken(
+            String token,
+            String expectedEmail
+    ) {
+
+        try {
+
+            Claims claims =
+                    extractAllClaims(
+                            token
+                    );
+
+            String tokenEmail =
+                    claims.getSubject();
+
+            Date expirationDate =
+                    claims.getExpiration();
+
+            return tokenEmail != null
+                    && tokenEmail.equals(
+                    expectedEmail
+            )
+                    && expirationDate != null
+                    && expirationDate.after(
+                    new Date()
+            );
+
+        } catch (
+                JwtException
+                | IllegalArgumentException exception
+        ) {
+
+            return false;
+        }
+    }
+
+    private Claims extractAllClaims(
+            String token
+    ) {
+
+        return Jwts.parser()
+                .verifyWith(
+                        getSigningKey()
+                )
+                .build()
+                .parseSignedClaims(
+                        token
+                )
+                .getPayload();
+    }
 }
