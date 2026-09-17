@@ -27,11 +27,11 @@ public class GuestDataDumpController {
     private GuestDataDumpServiceImpl guestDataDumpService;
 
     @PostMapping("/upload")
-    public ResponseEntity<?> upload(@RequestParam("file") MultipartFile file,
-                                    @RequestParam Integer userId) {
+    public ResponseEntity<?> upload(@RequestParam("file") MultipartFile file
+                                    ) {
         if (GuestHelper.checkExcelFormat(file)) {
             //upload
-            this.guestDataDumpService.save(file, userId);
+            this.guestDataDumpService.save(file);
             return ResponseEntity.ok(Map.of("message", "File is uploaded successfully !! Data is saved to db !!"));
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please upload excel file only");
@@ -45,7 +45,7 @@ public class GuestDataDumpController {
 
     @GetMapping("/download")
     public ResponseEntity<Resource> downloadExcel(
-            @RequestParam Integer userId
+
     ) throws IOException {
 
         String fileName =
@@ -53,7 +53,6 @@ public class GuestDataDumpController {
 
         ByteArrayInputStream actualData =
                 guestDataDumpService.getActualData(
-                        userId
                 );
 
         InputStreamResource file =
