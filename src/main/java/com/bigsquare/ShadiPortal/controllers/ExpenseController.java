@@ -115,8 +115,7 @@ public Expense createExpense(
         @RequestPart(
                 value = "bill",
                 required = false
-        ) MultipartFile bill,
-        @RequestParam Integer userId
+        ) MultipartFile bill
 ) {
 
     try {
@@ -133,8 +132,7 @@ public Expense createExpense(
 
         return expenseService.createExpense(
                 expense,
-                bill,
-                userId
+                bill
         );
 
     } catch (Exception exception) {
@@ -241,7 +239,7 @@ public Expense createExpense(
     // Paginated Expenses
     @GetMapping
     public Page<Expense> getPaginatedExpenses(
-            @RequestParam Integer userId,
+
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false, defaultValue = "") String search,
@@ -249,7 +247,7 @@ public Expense createExpense(
     ) {
 
         return expenseService.getPaginatedExpenses(
-                userId,
+
                 page,
                 size,
                 search,
@@ -265,13 +263,11 @@ public Expense createExpense(
 
     @GetMapping("/export")
     public ResponseEntity<byte[]> exportExpenses(
-            @RequestParam Integer userId
+
     ) {
 
         byte[] excelData =
-                expenseService.exportExpenses(
-                        userId
-                );
+                expenseService.exportExpenses();
 
         return ResponseEntity.ok()
                 .header(
@@ -310,15 +306,11 @@ public Expense createExpense(
 
     @GetMapping("/summary")
     public ResponseEntity<ExpenseSummaryDto>
-    getExpenseSummary(
-
-            @RequestParam Integer userId
-
-    ) {
+    getExpenseSummary() {
 
         return ResponseEntity.ok(
                 expenseService.getExpenseSummary(
-                        userId
+
                 )
         );
     }
