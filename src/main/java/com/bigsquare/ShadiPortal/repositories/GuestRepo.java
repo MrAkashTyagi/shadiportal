@@ -42,11 +42,21 @@ public interface GuestRepo extends JpaRepository<Guest, Integer> {
                             :adultOrchild = ''
                             OR LOWER(g.adultOrchild) = LOWER(:adultOrchild)
                         )
-                                 AND
-                        (
-                            :guestCategory = ''
-                            OR LOWER(g.guestCategory) = LOWER(:guestCategory)
-                        )
+                                 AND (
+                             :guestCategory = ''
+                         
+                             OR LOWER(g.guestCategory) = LOWER(:guestCategory)
+                         
+                             OR (
+                                 LOWER(:guestCategory) = 'shadi'
+                                 AND LOWER(g.guestCategory) = 'both'
+                             )
+                         
+                             OR (
+                                 LOWER(:guestCategory) = 'sagai'
+                                 AND LOWER(g.guestCategory) = 'both'
+                             )
+                         )
                          AND (
                              :gift = ''
                              OR LOWER(g.gift) LIKE LOWER(CONCAT('%', :gift, '%'))
