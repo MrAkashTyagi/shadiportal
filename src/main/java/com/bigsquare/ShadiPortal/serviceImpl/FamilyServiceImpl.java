@@ -8,6 +8,7 @@ import com.bigsquare.ShadiPortal.entities.User;
 import com.bigsquare.ShadiPortal.repositories.FamilyRepo;
 import com.bigsquare.ShadiPortal.repositories.GuestRepo;
 import com.bigsquare.ShadiPortal.repositories.UserRepo;
+import com.bigsquare.ShadiPortal.security.CurrentUserService;
 import com.bigsquare.ShadiPortal.services.FamilyService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,9 @@ public class FamilyServiceImpl implements FamilyService {
     @Autowired
     private GuestRepo guestRepo;
 
+    @Autowired
+    private CurrentUserService currentUserService;
+
     @Override
     public Family createFamily(
             FamilyRequest request
@@ -46,17 +50,19 @@ public class FamilyServiceImpl implements FamilyService {
             );
         }
 
-        if (request.getUserId() == null) {
-            throw new IllegalArgumentException(
-                    "User id is required"
-            );
-        }
+
 
         String familyName =
                 request.getFamilyName().trim();
 
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
+
         User user = userRepo
-                .findById(request.getUserId())
+                .findById(
+                        userId
+                )
                 .orElseThrow(() ->
                         new EntityNotFoundException(
                                 "User not found with id: "
@@ -83,15 +89,15 @@ public class FamilyServiceImpl implements FamilyService {
         return familyRepo.save(family);
     }
 
-//    @Override
-//    public List<Family> getAllFamilies() {
-//        return this.familyRepo.findAll();
-//    }
 
     @Override
-    public List<Family> getAllFamilies(Long userId) {
-
-        return familyRepo.findByUserId(userId);
+    public List<Family> getAllFamilies() {
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
+        return familyRepo.findByUserId(
+                userId.longValue()
+        );
     }
 
     @Override
@@ -118,9 +124,8 @@ public class FamilyServiceImpl implements FamilyService {
         }
 
         Integer userId =
-                request.getUserId() != null
-                        ? request.getUserId()
-                        : existingFamily.getUser().getId();
+                currentUserService
+                        .getCurrentUserId();
 
         Optional<Family> duplicateFamily =
                 familyRepo
@@ -165,7 +170,13 @@ public class FamilyServiceImpl implements FamilyService {
     }
 
     @Override
-    public Page<Family> getPaginatedFamilyResult(Integer userId, int page, int size, String search) {
+    public Page<Family> getPaginatedFamilyResult(int page, int size, String search) {
+
+
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
         String searchValue = search == null ? "" : search.trim();
         if (searchValue.isEmpty()) {
