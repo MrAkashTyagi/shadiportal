@@ -19,8 +19,7 @@ public interface GuestService {
 //    public Guest createGuest(Guest guest);
 
     Guest createGuest(
-            Guest guest,
-            Integer userId
+            Guest guest
     );
 
     public List<Guest> getAllGuests();
@@ -31,21 +30,19 @@ public interface GuestService {
 
     public Guest updateGuest(Integer id, Guest guest);
 
-
-    Page<Guest> getGuestWithPagination(Integer userId,
-                                       int page,
-                                       int size,
-                                       String search,
-                                       String gender,
-                                       String adultOrchild,
-                                       String cash,
-                                       String gift,
-                                       String stay,
-                                       String category,
-                                       Boolean invitationSent);
-
+    Page<Guest> getGuestWithPagination(
+            int page,
+            int size,
+            String search,
+            String gender,
+            String adultOrchild,
+            String cash,
+            String gift,
+            String stay,
+            String category,
+            Boolean invitationSent
+    );
     ByteArrayInputStream getFilteredActualData(
-            Integer userId,
             String search,
             String gender,
             String adultOrchild,
@@ -56,11 +53,9 @@ public interface GuestService {
             Boolean invitationSent
     ) throws IOException;
 
-    GuestSummaryDto getGuestSummary( Integer userId);
+    GuestSummaryDto getGuestSummary();
 
     List<GuestCategorySummaryDto> getGuestCategorySummary();
 
-    List<GiftSummaryDto> getGiftSummary(
-            Integer userId
-    );
+    List<GiftSummaryDto> getGiftSummary();
 }
