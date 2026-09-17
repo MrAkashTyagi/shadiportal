@@ -11,12 +11,10 @@ import java.util.List;
 public interface ExpenseService {
 
     // Create
-//    Expense createExpense(Expense expense, MultipartFile bill);
 
     Expense createExpense(
             Expense expense,
-            MultipartFile bill,
-            Integer userId
+            MultipartFile bill
     );
 
     // Update
@@ -30,7 +28,7 @@ public interface ExpenseService {
 
     // Paginated + Search + Category Filter
     Page<Expense> getPaginatedExpenses(
-            Integer userId,
+
             int page,
             int size,
             String search,
@@ -41,9 +39,9 @@ public interface ExpenseService {
     void deleteExpense(Integer id);
 
     // Export
-    byte[] exportExpenses(Integer userId);
+    byte[] exportExpenses();
 
-    ExpenseSummaryDto getExpenseSummary(Integer userId);
+    ExpenseSummaryDto getExpenseSummary();
 
     List<ExpenseCategorySummaryDto>
     getExpenseCategorySummary();
