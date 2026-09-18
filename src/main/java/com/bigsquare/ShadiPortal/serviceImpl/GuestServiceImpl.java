@@ -360,6 +360,7 @@ public class GuestServiceImpl implements GuestService {
                 guestList
         );
     }
+
     @Override
     public GuestSummaryDto getGuestSummary(
 
@@ -392,9 +393,19 @@ public class GuestServiceImpl implements GuestService {
     }
 
     @Override
-    public List<GuestCategorySummaryDto> getGuestCategorySummary() {
-        return guestRepo.getGuestCategorySummary();
+    public List<GuestCategorySummaryDto>
+    getGuestCategorySummary() {
+
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
+
+        return guestRepo
+                .getGuestCategorySummary(
+                        userId
+                );
     }
+
 
     public List<Guest> getGuestsByUserId(
             Integer userId
