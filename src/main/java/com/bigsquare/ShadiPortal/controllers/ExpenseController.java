@@ -264,10 +264,21 @@ public Expense createExpense(
     @GetMapping("/export")
     public ResponseEntity<byte[]> exportExpenses(
 
+            @RequestParam(
+                    defaultValue = ""
+            ) String search,
+
+            @RequestParam(
+                    defaultValue = ""
+            ) String category
+
     ) {
 
         byte[] excelData =
-                expenseService.exportExpenses();
+                expenseService.exportExpenses(
+                        search,
+                        category
+                );
 
         return ResponseEntity.ok()
                 .header(
@@ -281,6 +292,8 @@ public Expense createExpense(
                 )
                 .body(excelData);
     }
+
+
     @GetMapping("/bill/download/{id}")
     public ResponseEntity<Resource> downloadBill(
             @PathVariable Integer id
