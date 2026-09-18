@@ -323,15 +323,30 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     @Override
-    public byte[] exportExpenses() {
+    public byte[] exportExpenses(
+            String search,
+            String category
+    ) {
 
         Integer userId =
                 currentUserService
                         .getCurrentUserId();
 
+        String searchValue =
+                search == null
+                        ? ""
+                        : search.trim();
+
+        String categoryValue =
+                category == null
+                        ? ""
+                        : category.trim();
+
         List<Expense> expenses =
-                expenseRepo.findAllByUserId(
-                        userId
+                expenseRepo.findForExport(
+                        userId,
+                        searchValue,
+                        categoryValue
                 );
 
         try (
@@ -521,20 +536,6 @@ public class ExpenseServiceImpl implements ExpenseService {
                 .max(Double::compareTo)
                 .orElse(0.0);
 
-//        String topCategory = expenses.stream()
-//                .filter(e -> e.getCategory() != null)
-//                .collect(
-//                        java.util.stream.Collectors.groupingBy(
-//                                Expense::getCategory,
-//                                java.util.stream.Collectors.counting()
-//                        )
-//                )
-//                .entrySet()
-//                .stream()
-//                .max(java.util.Map.Entry.comparingByValue())
-//                .map(java.util.Map.Entry::getKey)
-//                .orElse("-");
-
         String topCategory = expenses.stream()
                 .filter(expense ->
                         expense.getCategory() != null &&
@@ -564,31 +565,19 @@ public class ExpenseServiceImpl implements ExpenseService {
                 topCategory
         );
     }
-//
-//    @Override
-//    public List<ExpenseCategorySummaryDto>
-//    getExpenseCategorySummary() {
-//
-//        return expenseRepo
-//                .getCategoryWiseExpense()
-//                .stream()
-//                .map(row -> new ExpenseCategorySummaryDto(
-//
-//                        String.valueOf(row[0]),
-//
-//                        row[1] != null
-//                                ? (BigDecimal) row[1]
-//                                : BigDecimal.ZERO
-//
-//                ))
-//                .toList();
-//    }
 
     @Override
-    public List<ExpenseCategorySummaryDto> getExpenseCategorySummary() {
+    public List<ExpenseCategorySummaryDto>
+    getExpenseCategorySummary() {
+
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
 
         return expenseRepo
-                .getCategoryWiseExpense()
+                .getCategoryWiseExpense(
+                        userId
+                )
                 .stream()
                 .map(row -> new ExpenseCategorySummaryDto(
 
