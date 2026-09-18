@@ -39,7 +39,10 @@ public interface ExpenseService {
     void deleteExpense(Integer id);
 
     // Export
-    byte[] exportExpenses();
+    byte[] exportExpenses(
+            String search,
+            String category
+    );
 
     ExpenseSummaryDto getExpenseSummary();
 
