@@ -44,33 +44,18 @@ public interface ExpenseRepo extends JpaRepository<Expense, Integer> {
             Pageable pageable
     );
 
-//    @Query("""
-//            SELECT e.category,
-//                   SUM(e.amount)
-//            FROM Expense e
-//            GROUP BY e.category
-//            """)
-//    List<Object[]> getCategoryWiseExpense();
-
 
     @Query("""
-       SELECT e.category,
-              SUM(e.totalAmount)
-       FROM Expense e
-       WHERE e.category IS NOT NULL
-       GROUP BY e.category
-       """)
-    List<Object[]> getCategoryWiseExpense();
-
-//    @Query("""
-//            SELECT COALESCE(SUM(e.amount),0)
-//            FROM Expense e
-//            """)
-//    Double getTotalExpenseAmount();
-//
-//    Page<Expense> findAllByOrderByIdDesc(
-//            Pageable pageable
-//    );
+   SELECT e.category,
+          SUM(e.totalAmount)
+   FROM Expense e
+   WHERE e.category IS NOT NULL
+     AND e.user.id = :userId
+   GROUP BY e.category
+   """)
+    List<Object[]> getCategoryWiseExpense(
+            Integer userId
+    );
 
     @Query("""
         SELECT COALESCE(SUM(e.totalAmount),0)
@@ -125,5 +110,36 @@ public interface ExpenseRepo extends JpaRepository<Expense, Integer> {
     Page<Expense> findByUserIdOrderByIdDesc(
             Long userId,
             Pageable pageable);
+
+
+    @Query("""
+    SELECT e
+    FROM Expense e
+    WHERE e.user.id = :userId
+
+      AND (
+          :search = ''
+          OR LOWER(e.expenseName)
+             LIKE LOWER(
+                 CONCAT('%', :search, '%')
+             )
+          OR LOWER(e.paidBy)
+             LIKE LOWER(
+                 CONCAT('%', :search, '%')
+             )
+      )
+
+      AND (
+          :category = ''
+          OR e.category = :category
+      )
+
+    ORDER BY e.id DESC
+    """)
+    List<Expense> findForExport(
+            @Param("userId") Integer userId,
+            @Param("search") String search,
+            @Param("category") String category
+    );
 
 }
