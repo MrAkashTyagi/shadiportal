@@ -191,15 +191,20 @@ public interface GuestRepo extends JpaRepository<Guest, Integer> {
     long countByStay(String stay);
 
     @Query("""
-            SELECT new com.bigsquare.ShadiPortal.dto.GuestCategorySummaryDto(
-                COALESCE(g.guestCategory, 'Not Set'),
-                COUNT(g)
-            )
-            FROM Guest g
-            GROUP BY g.guestCategory
-            ORDER BY COUNT(g) DESC
-            """)
-    List<GuestCategorySummaryDto> getGuestCategorySummary();
+    SELECT new com.bigsquare.ShadiPortal.dto.GuestCategorySummaryDto(
+        COALESCE(g.guestCategory, 'Not Set'),
+        COUNT(g)
+    )
+    FROM Guest g
+    WHERE g.user.id = :userId
+    GROUP BY g.guestCategory
+    ORDER BY COUNT(g) DESC
+    """)
+    List<GuestCategorySummaryDto>
+    getGuestCategorySummary(
+            Integer userId
+    );
+
 
     @Query("""
                 SELECT COUNT(g)
