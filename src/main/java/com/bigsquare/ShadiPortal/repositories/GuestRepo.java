@@ -15,18 +15,13 @@ import java.util.Optional;
 @Repository
 public interface GuestRepo extends JpaRepository<Guest, Integer> {
 
-//    @Query("SELECT g FROM Guest g WHERE " +
-//            "LOWER(g.name) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-//            "CAST(g.id AS string) LIKE CONCAT('%', :search, '%')")
-//    Page<Guest> findBySearchQuery(@Param("search") String search, Pageable pageable);
-
 
     @Query("""
             SELECT g
             FROM Guest g
             WHERE
                         g.user.id = :userId
-                                    
+            
                 AND (
                     :search = ''
                     OR LOWER(g.name) LIKE LOWER(CONCAT('%', :search, '%'))
@@ -44,14 +39,14 @@ public interface GuestRepo extends JpaRepository<Guest, Integer> {
                         )
                                  AND (
                              :guestCategory = ''
-                         
+            
                              OR LOWER(g.guestCategory) = LOWER(:guestCategory)
-                         
+            
                              OR (
                                  LOWER(:guestCategory) = 'shadi'
                                  AND LOWER(g.guestCategory) = 'both'
                              )
-                         
+            
                              OR (
                                  LOWER(:guestCategory) = 'sagai'
                                  AND LOWER(g.guestCategory) = 'both'
@@ -61,7 +56,7 @@ public interface GuestRepo extends JpaRepository<Guest, Integer> {
                              :gift = ''
                              OR LOWER(g.gift) LIKE LOWER(CONCAT('%', :gift, '%'))
                          )
-                        
+            
                                          AND
                         (
                             :stay = ''
@@ -103,69 +98,81 @@ public interface GuestRepo extends JpaRepository<Guest, Integer> {
     );
 
     @Query("""
-        SELECT g
-        FROM Guest g
-        WHERE
-            g.user.id = :userId
-
-            AND (
-                :search = ''
-                OR LOWER(g.name)
-                    LIKE LOWER(CONCAT('%', :search, '%'))
-                OR CAST(g.id AS string)
-                    LIKE CONCAT('%', :search, '%')
-            )
-
-            AND (
-                :gender = ''
-                OR LOWER(g.gender) = LOWER(:gender)
-            )
-
-            AND (
-                :adultOrchild = ''
-                OR LOWER(g.adultOrchild) = LOWER(:adultOrchild)
-            )
-
-            AND (
-                :guestCategory = ''
-                OR LOWER(g.guestCategory) = LOWER(:guestCategory)
-            )
-
-            AND (
-                :gift = ''
-                OR LOWER(g.gift) LIKE LOWER(CONCAT('%', :gift, '%'))
-            )
-          
-
-            AND (
-                :stay = ''
-                OR LOWER(g.stay) = LOWER(:stay)
-            )
-
-            AND (
-                :cash = ''
-                OR LOWER(g.cash) = LOWER(:cash)
-            )
-
-            AND (
-                :invitationSent IS NULL
-
-                OR (
-                    :invitationSent = true
-                    AND g.invitationSent = true
+            SELECT g
+            FROM Guest g
+            WHERE
+                g.user.id = :userId
+            
+                AND (
+                    :search = ''
+                    OR LOWER(g.name)
+                        LIKE LOWER(CONCAT('%', :search, '%'))
+                    OR CAST(g.id AS string)
+                        LIKE CONCAT('%', :search, '%')
                 )
-
-                OR (
-                    :invitationSent = false
-                    AND (
-                        g.invitationSent = false
-                        OR g.invitationSent IS NULL
+            
+                AND (
+                    :gender = ''
+                    OR LOWER(g.gender) = LOWER(:gender)
+                )
+            
+                AND (
+                    :adultOrchild = ''
+                    OR LOWER(g.adultOrchild) = LOWER(:adultOrchild)
+                )
+            
+               AND (
+                   :guestCategory = ''
+            
+                   OR LOWER(g.guestCategory) =
+                      LOWER(:guestCategory)
+            
+                   OR (
+                       LOWER(:guestCategory) = 'shadi'
+                       AND LOWER(g.guestCategory) = 'both'
+                   )
+            
+                   OR (
+                       LOWER(:guestCategory) = 'sagai'
+                       AND LOWER(g.guestCategory) = 'both'
+                   )
+               )
+            
+                AND (
+                    :gift = ''
+                    OR LOWER(g.gift) LIKE LOWER(CONCAT('%', :gift, '%'))
+                )
+            
+            
+                AND (
+                    :stay = ''
+                    OR LOWER(g.stay) = LOWER(:stay)
+                )
+            
+                AND (
+                    :cash = ''
+                    OR LOWER(g.cash) = LOWER(:cash)
+                )
+            
+                AND (
+                    :invitationSent IS NULL
+            
+                    OR (
+                        :invitationSent = true
+                        AND g.invitationSent = true
+                    )
+            
+                    OR (
+                        :invitationSent = false
+                        AND (
+                            g.invitationSent = false
+                            OR g.invitationSent IS NULL
+                        )
                     )
                 )
-            )
-
-        ORDER BY g.id ASC
-        """)
+            
+            ORDER BY g.id ASC
+            """)
     List<Guest> findAllGuestsWithFilters(
             @Param("userId") Integer userId,
             @Param("search") String search,
@@ -191,17 +198,18 @@ public interface GuestRepo extends JpaRepository<Guest, Integer> {
     long countByStay(String stay);
 
     @Query("""
-    SELECT new com.bigsquare.ShadiPortal.dto.GuestCategorySummaryDto(
-        COALESCE(g.guestCategory, 'Not Set'),
-        COUNT(g)
-    )
-    FROM Guest g
-    WHERE g.user.id = :userId
-    GROUP BY g.guestCategory
-    ORDER BY COUNT(g) DESC
-    """)
+            SELECT new com.bigsquare.ShadiPortal.dto.GuestCategorySummaryDto(
+                COALESCE(g.guestCategory, 'Not Set'),
+                COUNT(g)
+            )
+            FROM Guest g
+            WHERE g.user.id = :userId
+            GROUP BY g.guestCategory
+            ORDER BY COUNT(g) DESC
+            """)
     List<GuestCategorySummaryDto>
     getGuestCategorySummary(
+            @Param("userId")
             Integer userId
     );
 
@@ -231,12 +239,10 @@ public interface GuestRepo extends JpaRepository<Guest, Integer> {
     );
 
     Page<Guest> findByUserIdOrderByIdDesc(
-            Long userId,
-            Pageable pageable);
+            Integer userId,
+            Pageable pageable
+    );
 
-//    long countByUserIdAndInvitationSentTrue(
-//            Integer userId
-//    );
 
     long countByUserIdAndStayIgnoreCase(
             Integer userId,
@@ -257,13 +263,17 @@ public interface GuestRepo extends JpaRepository<Guest, Integer> {
     );
 
     @Query("""
-       SELECT COUNT(g)
-       FROM Guest g
-       WHERE g.user.id = :userId
-       AND g.invitationSent = false
-       """)
+            SELECT COUNT(g)
+            FROM Guest g
+            WHERE g.user.id = :userId
+              AND (
+                  g.invitationSent = false
+                  OR g.invitationSent IS NULL
+              )
+            """)
     Long countPendingInvitationsByUserId(
-            @Param("userId") Integer userId
+            @Param("userId")
+            Integer userId
     );
 
     Long countByUserIdAndStay(
@@ -271,6 +281,14 @@ public interface GuestRepo extends JpaRepository<Guest, Integer> {
             String stay
     );
 
+    boolean existsByFamilyIdAndUserId(
+            Integer familyId,
+            Integer userId
+    );
 
+    long countByFamilyIdAndUserId(
+            Integer familyId,
+            Integer userId
+    );
 
 }
