@@ -132,7 +132,7 @@ public class DashboardServiceImpl
 
         return guestRepo
                 .findByUserIdOrderByIdDesc(
-                        userId.longValue(),
+                        userId,
                         PageRequest.of(
                                 0,
                                 5
