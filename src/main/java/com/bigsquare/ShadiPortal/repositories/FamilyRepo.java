@@ -95,4 +95,22 @@ public interface FamilyRepo extends JpaRepository<Family, Integer> {
 
     List<Family> findByUserId(Long userId);
 
+    Optional<Family> findByIdAndUserId(
+            Integer familyId,
+            Integer userId
+    );
+
+    @Query("""
+    SELECT COALESCE(
+        MAX(SIZE(f.guestList)),
+        0
+    )
+    FROM Family f
+    WHERE f.user.id = :userId
+    """)
+    Integer getLargestFamilySizeByUserId(
+            @Param("userId")
+            Integer userId
+    );
+
 }
