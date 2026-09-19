@@ -16,7 +16,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -49,7 +51,6 @@ public class FamilyServiceImpl implements FamilyService {
                     "Family name is required"
             );
         }
-
 
 
         String familyName =
@@ -106,14 +107,6 @@ public class FamilyServiceImpl implements FamilyService {
             FamilyRequest request
     ) {
 
-        Family existingFamily = familyRepo
-                .findById(id)
-                .orElseThrow(() ->
-                        new EntityNotFoundException(
-                                "Family not found with id: " + id
-                        )
-                );
-
         if (
                 request.getFamilyName() == null ||
                         request.getFamilyName().isBlank()
@@ -127,16 +120,35 @@ public class FamilyServiceImpl implements FamilyService {
                 currentUserService
                         .getCurrentUserId();
 
+        Family existingFamily =
+                familyRepo
+                        .findByIdAndUserId(
+                                id,
+                                userId
+                        )
+                        .orElseThrow(() ->
+                                new EntityNotFoundException(
+                                        "Family not found"
+                                )
+                        );
+
+        String familyName =
+                request.getFamilyName()
+                        .trim();
+
         Optional<Family> duplicateFamily =
                 familyRepo
                         .findByFamilyNameIgnoreCaseAndUserId(
-                                request.getFamilyName().trim(),
+                                familyName,
                                 userId
                         );
 
         if (
                 duplicateFamily.isPresent() &&
-                        !duplicateFamily.get().getId().equals(id)
+                        !duplicateFamily
+                                .get()
+                                .getId()
+                                .equals(id)
         ) {
             throw new IllegalArgumentException(
                     "Family with this name already exists"
@@ -144,29 +156,76 @@ public class FamilyServiceImpl implements FamilyService {
         }
 
         existingFamily.setFamilyName(
-                request.getFamilyName().trim()
+                familyName
         );
 
-        return familyRepo.save(existingFamily);
+        return familyRepo.save(
+                existingFamily
+        );
     }
 
     @Override
-    public Family getByFamilityId(Integer id) {
-        return this.familyRepo.findById(id).orElseThrow(() -> new IllegalArgumentException("Family with this id is not in the db"));
+    public Family getByFamilityId(
+            Integer id
+    ) {
+
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
+
+        return familyRepo
+                .findByIdAndUserId(
+                        id,
+                        userId
+                )
+                .orElseThrow(() ->
+                        new EntityNotFoundException(
+                                "Family not found"
+                        )
+                );
     }
 
     @Override
-    public void deleteFamily(Integer id) {
-//        this.familyRepo.deleteById(id);
+    public void deleteFamily(
+            Integer familyId
+    ) {
 
-        Family family = this.familyRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Family does not exists !!"));
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
 
-        if (family.getGuestList() != null) {
-            for (Guest guest : family.getGuestList()) {
-                guest.setFamily(null);
-            }
+        Family family =
+                familyRepo
+                        .findByIdAndUserId(
+                                familyId,
+                                userId
+                        )
+                        .orElseThrow(() ->
+                                new EntityNotFoundException(
+                                        "Family not found"
+                                )
+                        );
+
+        long guestCount =
+                guestRepo
+                        .countByFamilyIdAndUserId(
+                                familyId,
+                                userId
+                        );
+
+        if (guestCount > 0) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "This family contains "
+                            + guestCount
+                            + " guest(s). Delete the guests first."
+            );
         }
-        familyRepo.delete(family);
+
+        familyRepo.delete(
+                family
+        );
     }
 
     @Override
@@ -198,16 +257,26 @@ public class FamilyServiceImpl implements FamilyService {
     @Override
     public FamilySummaryDto getFamilySummary() {
 
-//        Long totalFamilies = familyRepo.count();
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
 
         Long totalFamilies =
-                familyRepo.count();
+                familyRepo.countByUserId(
+                        userId
+                );
 
         Long totalFamilyMembers =
-                familyRepo.getTotalFamilyMembers();
+                familyRepo
+                        .getTotalFamilyMembersByUserId(
+                                userId
+                        );
 
         Integer largestFamilySize =
-                familyRepo.getLargestFamilySize();
+                familyRepo
+                        .getLargestFamilySizeByUserId(
+                                userId
+                        );
 
         return new FamilySummaryDto(
                 totalFamilies,
