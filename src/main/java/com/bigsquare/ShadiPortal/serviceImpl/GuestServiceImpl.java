@@ -117,85 +117,202 @@ public class GuestServiceImpl implements GuestService {
     }
 
     public List<Guest> getAllGuests() {
-        List<Guest> guests = guestRepo.findAll();
-        return guests;
+
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
+
+        return guestRepo.findAllByUserId(
+                userId
+        );
     }
 
     @Override
-    public Guest getById(Integer id) {
-        Guest guest = this.guestRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Guest With given id is not found in the database !!"));
-        return guest;
+    public Guest getById(
+            Integer id
+    ) {
+
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
+
+        return guestRepo
+                .findByIdAndUserId(
+                        id,
+                        userId
+                )
+                .orElseThrow(() ->
+                        new EntityNotFoundException(
+                                "Guest not found"
+                        )
+                );
     }
 
     @Override
-    public void delete(Integer id) {
-        Guest guest = this.guestRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Guest does not exists !!"));
-        this.guestRepo.delete(guest);
+    public void delete(
+            Integer id
+    ) {
+
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
+
+        Guest guest =
+                guestRepo
+                        .findByIdAndUserId(
+                                id,
+                                userId
+                        )
+                        .orElseThrow(() ->
+                                new EntityNotFoundException(
+                                        "Guest not found"
+                                )
+                        );
+
+        guestRepo.delete(
+                guest
+        );
     }
 
     @Override
-    public Guest updateGuest(Integer id, Guest guest) {
+    public Guest updateGuest(
+            Integer id,
+            Guest guest
+    ) {
 
-//        get user
-        Guest existingGuest = this.guestRepo.findById(id).orElseThrow(() -> new EntityNotFoundException("Entity not found !!"));
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
 
-        existingGuest.setName(guest.getName());
-        existingGuest.setEmail(guest.getEmail());
-        existingGuest.setGuestCategory(guest.getGuestCategory());
-        existingGuest.setWhatsapp_Number(guest.getWhatsapp_Number());
-        existingGuest.setGender(guest.getGender());
-        existingGuest.setFamily(guest.getFamily());
-        existingGuest.setPhoneNumber(guest.getPhoneNumber());
-        existingGuest.setAdultOrchild(guest.getAdultOrchild());
-        existingGuest.setGift(guest.getGift());
-        existingGuest.setStay(guest.getStay());
-        existingGuest.setCash(guest.getCash());
-        existingGuest.setInvitationSent(guest.getInvitationSent());
+        Guest existingGuest =
+                guestRepo
+                        .findByIdAndUserId(
+                                id,
+                                userId
+                        )
+                        .orElseThrow(() ->
+                                new EntityNotFoundException(
+                                        "Guest not found"
+                                )
+                        );
 
-        // 2. SAFE FAMILY LOGIC (No Null ID Crash)
-        if (guest.getFamily() != null) {
+        existingGuest.setName(
+                guest.getName()
+        );
 
-            // AGAR USER NE DROPDOWN YA KAHI SE EXISTNG FAMILY KI ID BHEJI HAI
-            if (guest.getFamily().getId() != null) {
-                Family existingFamily = this.familyRepo.findById(guest.getFamily().getId())
-                        .orElseThrow(() -> new EntityNotFoundException("Family not found !!"));
-                existingGuest.setFamily(existingFamily);
-            }
+        existingGuest.setEmail(
+                guest.getEmail()
+        );
 
-            // AGAR ID NAHI HAI PAR FAMILY NAME BHEJA HAI (Aapke Angular Form Jaisa Case)
-            else if (guest.getFamily().getFamilyName() != null && !guest.getFamily().getFamilyName().trim().isEmpty()) {
-                String inputFamilyName = guest.getFamily().getFamilyName().trim();
+        existingGuest.setGuestCategory(
+                guest.getGuestCategory()
+        );
 
-                // Database me same name ka parivar dhoondenge (Unique and Duplicate check)
-//                Optional<Family> dbFamily = this.familyRepo.findByFamilyName(inputFamilyName);
+        existingGuest.setWhatsapp_Number(
+                guest.getWhatsapp_Number()
+        );
 
-                Integer userId =
-                        existingGuest
-                                .getUser()
-                                .getId();
+        existingGuest.setGender(
+                guest.getGender()
+        );
 
-                Optional<Family> dbFamily =
-                        this.familyRepo
-                                .findByFamilyNameIgnoreCaseAndUserId(
-                                        inputFamilyName,
-                                        userId
+        existingGuest.setPhoneNumber(
+                guest.getPhoneNumber()
+        );
+
+        existingGuest.setAdultOrchild(
+                guest.getAdultOrchild()
+        );
+
+        existingGuest.setGift(
+                guest.getGift()
+        );
+
+        existingGuest.setStay(
+                guest.getStay()
+        );
+
+        existingGuest.setCash(
+                guest.getCash()
+        );
+
+        existingGuest.setInvitationSent(
+                guest.getInvitationSent()
+        );
+
+        if (guest.getFamily() == null) {
+
+            existingGuest.setFamily(null);
+
+        } else if (
+                guest.getFamily().getId() != null
+        ) {
+
+            Family existingFamily =
+                    familyRepo
+                            .findByIdAndUserId(
+                                    guest.getFamily().getId(),
+                                    userId
+                            )
+                            .orElseThrow(() ->
+                                    new EntityNotFoundException(
+                                            "Family not found"
+                                    )
+                            );
+
+            existingGuest.setFamily(
+                    existingFamily
+            );
+
+        } else if (
+                guest.getFamily()
+                        .getFamilyName() != null &&
+                        !guest.getFamily()
+                                .getFamilyName()
+                                .isBlank()
+        ) {
+
+            String familyName =
+                    guest.getFamily()
+                            .getFamilyName()
+                            .trim();
+
+            Family resolvedFamily =
+                    familyRepo
+                            .findByFamilyNameIgnoreCaseAndUserId(
+                                    familyName,
+                                    userId
+                            )
+                            .orElseGet(() -> {
+
+                                Family newFamily =
+                                        new Family();
+
+                                newFamily.setFamilyName(
+                                        familyName
                                 );
 
+                                newFamily.setUser(
+                                        existingGuest.getUser()
+                                );
 
-                if (dbFamily.isPresent()) {
-                    existingGuest.setFamily(dbFamily.get()); // Purane se link kar do
-                } else {
-                    Family newFamily = new Family();
-                    newFamily.setFamilyName(inputFamilyName);
-                    existingGuest.setFamily(newFamily); // Naya parivar bna do
-                }
-            }
+                                return familyRepo.save(
+                                        newFamily
+                                );
+                            });
+
+            existingGuest.setFamily(
+                    resolvedFamily
+            );
+
         } else {
+
             existingGuest.setFamily(null);
         }
-        System.out.println(guest);
 
-        return this.guestRepo.save(existingGuest);
+        return guestRepo.save(
+                existingGuest
+        );
     }
 
     @Override
