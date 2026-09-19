@@ -75,9 +75,23 @@ public class FamilyController {
     }
 
     //    delete
+//    @DeleteMapping("/{id}")
+//    public void deleteFamily(@PathVariable Integer id) {
+//        this.familyService.deleteFamily(id);
+//    }
+
     @DeleteMapping("/{id}")
-    public void deleteFamily(@PathVariable Integer id) {
-        this.familyService.deleteFamily(id);
+    public ResponseEntity<Void> deleteFamily(
+            @PathVariable Integer id
+    ) {
+
+        familyService.deleteFamily(
+                id
+        );
+
+        return ResponseEntity
+                .noContent()
+                .build();
     }
 
     // get all for dropdown
