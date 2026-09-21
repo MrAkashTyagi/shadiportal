@@ -64,19 +64,13 @@ public class WallMediaServiceImpl
 
         validateFile(file);
 
-        Integer userId =
+        User currentUser =
                 currentUserService
-                        .getCurrentUserId();
+                        .getCurrentUser();
 
-        User user =
-                userRepo
-                        .findById(userId)
-                        .orElseThrow(() ->
-                                new EntityNotFoundException(
-                                        "User not found"
-                                )
-                        );
-
+        User ownerUser =
+                currentUserService
+                        .getCurrentOwnerUser();
         String contentType =
                 file.getContentType();
 
@@ -160,14 +154,23 @@ public class WallMediaServiceImpl
                     LocalDateTime.now()
             );
 
-            wallMedia.setUser(
-                    user
+            wallMedia.setOwnerUser(
+                    ownerUser
+            );
+
+            wallMedia.setUploadedBy(
+                    currentUser
             );
 
             WallMedia savedMedia =
                     wallMediaRepo.save(
                             wallMedia
                     );
+
+            System.out.println(
+                    "CURRENT USER = "
+                            + currentUser.getId()
+            );
 
             return toDto(
                     savedMedia
@@ -185,13 +188,13 @@ public class WallMediaServiceImpl
     @Override
     public List<WallMediaDto> getAllMedia() {
 
-        Integer userId =
+        Integer ownerUserId =
                 currentUserService
-                        .getCurrentUserId();
+                        .getCurrentOwnerUserId();
 
         return wallMediaRepo
-                .findAllByUserIdOrderByUploadedAtDesc(
-                        userId
+                .findAllByOwnerUserIdOrderByUploadedAtDesc(
+                        ownerUserId
                 )
                 .stream()
                 .map(
@@ -205,14 +208,14 @@ public class WallMediaServiceImpl
             Integer mediaId
     ) {
 
-        Integer userId =
+        Integer ownerUserId =
                 currentUserService
-                        .getCurrentUserId();
+                        .getCurrentOwnerUserId();
 
         return wallMediaRepo
-                .findByIdAndUserId(
+                .findByIdAndOwnerUserId(
                         mediaId,
-                        userId
+                        ownerUserId
                 )
                 .orElseThrow(() ->
                         new EntityNotFoundException(
@@ -225,6 +228,21 @@ public class WallMediaServiceImpl
     public void deleteMedia(
             Integer mediaId
     ) {
+
+        User currentUser =
+                currentUserService
+                        .getCurrentUser();
+
+        if (
+                "ROLE_GUEST".equals(
+                        currentUser.getRole()
+                )
+        ) {
+
+            throw new RuntimeException(
+                    "Guest users cannot delete media"
+            );
+        }
 
         WallMedia wallMedia =
                 getMediaForCurrentUser(
@@ -353,14 +371,14 @@ public class WallMediaServiceImpl
     public ByteArrayResource
     downloadAllMedia() {
 
-        Integer userId =
+        Integer ownerUserId =
                 currentUserService
-                        .getCurrentUserId();
+                        .getCurrentOwnerUserId();
 
         List<WallMedia> mediaList =
                 wallMediaRepo
-                        .findAllByUserIdOrderByUploadedAtDesc(
-                                userId
+                        .findAllByOwnerUserIdOrderByUploadedAtDesc(
+                                ownerUserId
                         );
 
         try (
