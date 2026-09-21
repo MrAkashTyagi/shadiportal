@@ -63,4 +63,20 @@ public class WallMedia {
             "expenses"
     })
     private User user;
+
+    @ManyToOne(
+            fetch = FetchType.LAZY,
+            optional = false
+    )
+    @JoinColumn(
+            name = "owner_user_id",
+            nullable = false
+    )
+    @JsonIgnoreProperties({
+            "password",
+            "guests",
+            "expenses",
+            "ownerUser"
+    })
+    private User ownerUser;
 }
