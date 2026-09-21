@@ -37,23 +37,18 @@ public class User {
     private String image;
     private boolean enabled;
 
-//    public User(Integer id, String name, String role, String email, String password, String about, String image, boolean enabled) {
-//        this.id = id;
-//        this.name = name;
-//        this.role = role;
-//        this.email = email;
-//        this.password = password;
-//        this.about = about;
-//        this.image = image;
-//        this.enabled = enabled;
-//    }
-
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
     List<Guest> guests = new ArrayList<>();
 
     @JsonIgnore
     @OneToMany(mappedBy = "user")
     private List<Expense> expenses = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_user_id")
+    @JsonIgnore
+    private User ownerUser;
+
 
     public boolean getEnabled() {
         return enabled;
