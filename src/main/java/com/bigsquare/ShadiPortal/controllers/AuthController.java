@@ -7,6 +7,7 @@ import com.bigsquare.ShadiPortal.entities.User;
 import com.bigsquare.ShadiPortal.repositories.UserRepo;
 import com.bigsquare.ShadiPortal.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 //import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -15,6 +16,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Map;
 import java.util.Optional;
+
+import com.bigsquare.ShadiPortal.dto.GuestAccountRequest;
+import com.bigsquare.ShadiPortal.dto.GuestAccountResponse;
+import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/auth")
@@ -69,6 +75,10 @@ public class AuthController {
         );
 
         user.setRole("ROLE_USER");
+
+        user.setOwnerUser(
+                null
+        );
 
         user.setEnabled(true);
 
@@ -154,5 +164,127 @@ public class AuthController {
                 )
 
         );
+    }
+
+    @PostMapping("/guest")
+    public ResponseEntity<?>
+    createGuestAccount(
+
+            @Valid
+            @RequestBody
+            GuestAccountRequest request,
+
+            Authentication authentication
+
+    ) {
+
+        String currentUserEmail =
+                authentication.getName();
+
+        User ownerUser =
+                userRepo
+                        .findByEmail(
+                                currentUserEmail
+                        )
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Owner user not found"
+                                )
+                        );
+
+        if (
+                !"ROLE_USER".equals(
+                        ownerUser.getRole()
+                )
+        ) {
+
+            return ResponseEntity
+                    .status(
+                            HttpStatus.FORBIDDEN
+                    )
+                    .body(
+                            "Only wedding owners can create guest accounts"
+                    );
+        }
+
+        String guestEmail =
+                request.getEmail()
+                        .trim()
+                        .toLowerCase();
+
+        if (
+                userRepo
+                        .findByEmail(
+                                guestEmail
+                        )
+                        .isPresent()
+        ) {
+
+            return ResponseEntity
+                    .badRequest()
+                    .body(
+                            "Email already registered"
+                    );
+        }
+
+        User guestUser =
+                new User();
+
+        guestUser.setName(
+                request.getName()
+                        .trim()
+        );
+
+        guestUser.setEmail(
+                guestEmail
+        );
+
+        guestUser.setPassword(
+                passwordEncoder.encode(
+                        request.getPassword()
+                )
+        );
+
+        guestUser.setRole(
+                "ROLE_GUEST"
+        );
+
+        guestUser.setOwnerUser(
+                ownerUser
+        );
+
+        guestUser.setAbout(
+                "Wedding guest account"
+        );
+
+        guestUser.setImage(
+                "default.png"
+        );
+
+        guestUser.setEnabled(
+                true
+        );
+
+        User savedGuestUser =
+                userRepo.save(
+                        guestUser
+                );
+
+        GuestAccountResponse response =
+                new GuestAccountResponse(
+                        savedGuestUser.getId(),
+                        savedGuestUser.getName(),
+                        savedGuestUser.getEmail(),
+                        savedGuestUser.getRole(),
+                        ownerUser.getId()
+                );
+
+        return ResponseEntity
+                .status(
+                        HttpStatus.CREATED
+                )
+                .body(
+                        response
+                );
     }
 }
