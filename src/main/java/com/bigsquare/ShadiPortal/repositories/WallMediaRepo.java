@@ -12,13 +12,13 @@ public interface WallMediaRepo
         extends JpaRepository<WallMedia, Integer> {
 
     List<WallMedia>
-    findAllByUserIdOrderByUploadedAtDesc(
-            Integer userId
+    findAllByOwnerUserIdOrderByUploadedAtDesc(
+            Integer ownerUserId
     );
 
     Optional<WallMedia>
-    findByIdAndUserId(
+    findByIdAndOwnerUserId(
             Integer mediaId,
-            Integer userId
+            Integer ownerUserId
     );
 }
