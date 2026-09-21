@@ -7,6 +7,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "wall_media")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -48,6 +49,12 @@ public class WallMedia {
     @Column(nullable = false)
     private LocalDateTime uploadedAt;
 
+    /*
+     * Existing user_id column is now treated as the
+     * wedding-space owner.
+     *
+     * This preserves existing Wall media records.
+     */
     @ManyToOne(
             fetch = FetchType.LAZY,
             optional = false
@@ -59,18 +66,20 @@ public class WallMedia {
     @JsonIgnoreProperties({
             "password",
             "guests",
-            "families",
-            "expenses"
+            "expenses",
+            "ownerUser"
     })
-    private User user;
+    private User ownerUser;
 
-    @ManyToOne(
-            fetch = FetchType.LAZY,
-            optional = false
-    )
+    /*
+     * Actual account that uploaded the file.
+     *
+     * Nullable temporarily, because older Wall records
+     * will not have this value until database backfill.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
-            name = "owner_user_id",
-            nullable = false
+            name = "uploaded_by_user_id"
     )
     @JsonIgnoreProperties({
             "password",
@@ -78,5 +87,5 @@ public class WallMedia {
             "expenses",
             "ownerUser"
     })
-    private User ownerUser;
+    private User uploadedBy;
 }
