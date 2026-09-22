@@ -295,8 +295,25 @@ public class WallMediaServiceImpl
 //            );
 //        }
 
-        cloudinaryService.deleteFile(
-                wallMedia.getPublicId()
+        String resourceType =
+                wallMedia.getMediaType()
+                        == WallMediaType.VIDEO
+                        ? "video"
+                        : "image";
+
+        if (
+                wallMedia.getPublicId() != null &&
+                        !wallMedia.getPublicId().isBlank()
+        ) {
+
+            cloudinaryService.deleteFile(
+                    wallMedia.getPublicId(),
+                    resourceType
+            );
+        }
+
+        wallMediaRepo.delete(
+                wallMedia
         );
 
         wallMediaRepo.delete(
