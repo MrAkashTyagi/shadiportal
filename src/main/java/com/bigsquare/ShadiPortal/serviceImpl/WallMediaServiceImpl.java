@@ -14,8 +14,12 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.bigsquare.ShadiPortal.services.CloudinaryService;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -430,34 +434,68 @@ public class WallMediaServiceImpl
                     : mediaList
             ) {
 
-                Path path =
-                        Paths.get(
-                                media.getStoragePath()
-                        );
+//                Path path =
+//                        Paths.get(
+//                                media.getStoragePath()
+//                        );
+//
+//                if (
+//                        !Files.exists(
+//                                path
+//                        )
+//                ) {
+//                    continue;
+//                }
+//
+//                ZipEntry zipEntry =
+//                        new ZipEntry(
+//                                media.getOriginalFileName()
+//                        );
+//
+//                zos.putNextEntry(
+//                        zipEntry
+//                );
+//
+//                Files.copy(
+//                        path,
+//                        zos
+//                );
+//
+//                zos.closeEntry();
 
-                if (
-                        !Files.exists(
-                                path
-                        )
+                try (
+
+                        InputStream inputStream =
+                                new URL(
+                                        media.getStoragePath()
+                                ).openStream()
+
                 ) {
-                    continue;
+
+                    ZipEntry zipEntry =
+                            new ZipEntry(
+                                    media.getOriginalFileName()
+                            );
+
+                    zos.putNextEntry(
+                            zipEntry
+                    );
+
+                    inputStream.transferTo(
+                            zos
+                    );
+
+                    zos.closeEntry();
+
+                } catch (Exception exception) {
+
+                    System.out.println(
+                            "Skipping file: "
+                                    + media.getOriginalFileName()
+                    );
                 }
 
-                ZipEntry zipEntry =
-                        new ZipEntry(
-                                media.getOriginalFileName()
-                        );
 
-                zos.putNextEntry(
-                        zipEntry
-                );
-
-                Files.copy(
-                        path,
-                        zos
-                );
-
-                zos.closeEntry();
             }
 
             zos.finish();
