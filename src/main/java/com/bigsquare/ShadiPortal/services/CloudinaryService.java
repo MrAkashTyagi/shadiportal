@@ -20,27 +20,31 @@ public class CloudinaryService {
     ) {
 
         try {
+
             return cloudinary
                     .uploader()
                     .upload(
                             file.getBytes(),
                             ObjectUtils.asMap(
                                     "resource_type",
-                                    "auto"
+                                    "auto",
+                                    "folder",
+                                    "shadi-portal/wall"
                             )
                     );
 
-        } catch (IOException e) {
+        } catch (IOException exception) {
 
             throw new RuntimeException(
                     "Cloudinary upload failed",
-                    e
+                    exception
             );
         }
     }
 
     public void deleteFile(
-            String publicId
+            String publicId,
+            String resourceType
     ) {
 
         try {
@@ -49,14 +53,17 @@ public class CloudinaryService {
                     .uploader()
                     .destroy(
                             publicId,
-                            ObjectUtils.emptyMap()
+                            ObjectUtils.asMap(
+                                    "resource_type",
+                                    resourceType
+                            )
                     );
 
-        } catch (IOException e) {
+        } catch (IOException exception) {
 
             throw new RuntimeException(
                     "Cloudinary delete failed",
-                    e
+                    exception
             );
         }
     }
