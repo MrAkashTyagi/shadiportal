@@ -26,4 +26,6 @@ public class WallMediaDto {
     private String caption;
 
     private LocalDateTime uploadedAt;
+
+    private String uploadedByName;
 }
