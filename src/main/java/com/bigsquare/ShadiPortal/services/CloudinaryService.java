@@ -20,12 +20,14 @@ public class CloudinaryService {
     ) {
 
         try {
-
             return cloudinary
                     .uploader()
                     .upload(
                             file.getBytes(),
-                            ObjectUtils.emptyMap()
+                            ObjectUtils.asMap(
+                                    "resource_type",
+                                    "auto"
+                            )
                     );
 
         } catch (IOException e) {
