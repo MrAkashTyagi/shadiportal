@@ -22,6 +22,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -55,6 +56,9 @@ public class WallMediaServiceImpl
 
     @Autowired
     private CurrentUserService currentUserService;
+
+    @Autowired
+    private CloudinaryService cloudinaryService;
 
     @Override
     public WallMediaDto uploadMedia(
@@ -111,11 +115,20 @@ public class WallMediaServiceImpl
                             )
                             .normalize();
 
-            Files.copy(
-                    file.getInputStream(),
-                    targetPath,
-                    StandardCopyOption.REPLACE_EXISTING
-            );
+//            Files.copy(
+//                    file.getInputStream(),
+//                    targetPath,
+//                    StandardCopyOption.REPLACE_EXISTING
+//            );
+
+            Map uploadResult =
+                    cloudinaryService
+                            .uploadFile(file);
+
+            String cloudinaryUrl =
+                    uploadResult
+                            .get("secure_url")
+                            .toString();
 
             WallMedia wallMedia =
                     new WallMedia();
@@ -128,8 +141,12 @@ public class WallMediaServiceImpl
                     storedFileName
             );
 
+//            wallMedia.setStoragePath(
+//                    targetPath.toString()
+//            );
+
             wallMedia.setStoragePath(
-                    targetPath.toString()
+                    cloudinaryUrl
             );
 
             wallMedia.setContentType(
@@ -355,9 +372,7 @@ public class WallMediaServiceImpl
         return new WallMediaDto(
                 wallMedia.getId(),
                 wallMedia.getOriginalFileName(),
-                "/wall/"
-                        + wallMedia.getId()
-                        + "/content",
+                wallMedia.getStoragePath(),
                 wallMedia.getContentType(),
                 wallMedia.getMediaType()
                         .name(),
