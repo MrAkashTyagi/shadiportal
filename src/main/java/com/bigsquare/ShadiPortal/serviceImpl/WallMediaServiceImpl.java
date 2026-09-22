@@ -130,6 +130,11 @@ public class WallMediaServiceImpl
                             .get("secure_url")
                             .toString();
 
+            String publicId =
+                    uploadResult
+                            .get("public_id")
+                            .toString();
+
             WallMedia wallMedia =
                     new WallMedia();
 
@@ -147,6 +152,10 @@ public class WallMediaServiceImpl
 
             wallMedia.setStoragePath(
                     cloudinaryUrl
+            );
+
+            wallMedia.setPublicId(
+                    publicId
             );
 
             wallMedia.setContentType(
@@ -266,21 +275,25 @@ public class WallMediaServiceImpl
                         mediaId
                 );
 
-        try {
+//        try {
+//
+//            Files.deleteIfExists(
+//                    Paths.get(
+//                            wallMedia.getStoragePath()
+//                    )
+//            );
+//
+//        } catch (IOException exception) {
+//
+//            throw new RuntimeException(
+//                    "Unable to delete media file",
+//                    exception
+//            );
+//        }
 
-            Files.deleteIfExists(
-                    Paths.get(
-                            wallMedia.getStoragePath()
-                    )
-            );
-
-        } catch (IOException exception) {
-
-            throw new RuntimeException(
-                    "Unable to delete media file",
-                    exception
-            );
-        }
+        cloudinaryService.deleteFile(
+                wallMedia.getPublicId()
+        );
 
         wallMediaRepo.delete(
                 wallMedia
