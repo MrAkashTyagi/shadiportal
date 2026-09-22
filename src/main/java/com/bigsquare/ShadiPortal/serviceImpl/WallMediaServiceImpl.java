@@ -363,7 +363,11 @@ public class WallMediaServiceImpl
                         .name(),
                 wallMedia.getFileSize(),
                 wallMedia.getCaption(),
-                wallMedia.getUploadedAt()
+                wallMedia.getUploadedAt(),
+                wallMedia.getUploadedBy() == null
+                        ? "Unknown"
+                        : wallMedia.getUploadedBy()
+                        .getName()
         );
     }
 
