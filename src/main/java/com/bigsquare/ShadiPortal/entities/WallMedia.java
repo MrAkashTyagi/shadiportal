@@ -88,4 +88,7 @@ public class WallMedia {
             "ownerUser"
     })
     private User uploadedBy;
+
+    @Column(name = "public_id")
+    private String publicId;
 }
