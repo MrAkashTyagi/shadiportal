@@ -1,18 +1,12 @@
 package com.bigsquare.ShadiPortal.controllers;
 
 import com.bigsquare.ShadiPortal.dto.WallMediaDto;
-import com.bigsquare.ShadiPortal.entities.WallMedia;
 import com.bigsquare.ShadiPortal.services.WallMediaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 @RestController
@@ -65,68 +59,6 @@ public class WallMediaController {
         );
     }
 
-    @GetMapping("/{id}/content")
-    public ResponseEntity<Resource>
-    getMediaContent(
-            @PathVariable Integer id
-    ) {
-
-        WallMedia wallMedia =
-                wallMediaService
-                        .getMediaForCurrentUser(
-                                id
-                        );
-
-        Path filePath =
-                Paths.get(
-                        wallMedia.getStoragePath()
-                );
-
-        Resource resource =
-                new FileSystemResource(
-                        filePath
-                );
-
-
-        if (!resource.exists()) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "Media file not found"
-            );
-        }
-
-        MediaType mediaType;
-
-        try {
-
-            mediaType =
-                    MediaType.parseMediaType(
-                            wallMedia.getContentType()
-                    );
-
-        } catch (Exception exception) {
-
-            mediaType =
-                    MediaType.APPLICATION_OCTET_STREAM;
-        }
-
-        return ResponseEntity.ok()
-                .contentType(
-                        mediaType
-                )
-                .header(
-                        HttpHeaders.CONTENT_DISPOSITION,
-                        "inline; filename=\""
-                                + wallMedia
-                                .getOriginalFileName()
-                                + "\""
-                )
-                .body(
-                        resource
-                );
-    }
-
     @DeleteMapping("/{id}")
     public ResponseEntity<Void>
     deleteMedia(
@@ -145,7 +77,7 @@ public class WallMediaController {
     @GetMapping(
             "/download-all"
     )
-    public ResponseEntity<Resource>
+    public ResponseEntity<ByteArrayResource>
     downloadAllMedia() {
 
         ByteArrayResource resource =
