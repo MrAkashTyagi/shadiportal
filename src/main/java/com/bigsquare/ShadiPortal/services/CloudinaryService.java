@@ -16,11 +16,11 @@ public class CloudinaryService {
     private Cloudinary cloudinary;
 
     public Map uploadFile(
-            MultipartFile file
+            MultipartFile file,
+            String folder
     ) {
 
         try {
-
             return cloudinary
                     .uploader()
                     .upload(
@@ -29,7 +29,7 @@ public class CloudinaryService {
                                     "resource_type",
                                     "auto",
                                     "folder",
-                                    "shadi-portal/wall"
+                                    folder
                             )
                     );
 
