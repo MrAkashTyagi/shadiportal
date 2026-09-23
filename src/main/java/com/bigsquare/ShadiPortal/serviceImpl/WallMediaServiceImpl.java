@@ -4,7 +4,6 @@ import com.bigsquare.ShadiPortal.dto.WallMediaDto;
 import com.bigsquare.ShadiPortal.entities.User;
 import com.bigsquare.ShadiPortal.entities.WallMedia;
 import com.bigsquare.ShadiPortal.entities.WallMediaType;
-import com.bigsquare.ShadiPortal.repositories.UserRepo;
 import com.bigsquare.ShadiPortal.repositories.WallMediaRepo;
 import com.bigsquare.ShadiPortal.security.CurrentUserService;
 import com.bigsquare.ShadiPortal.services.WallMediaService;
@@ -20,14 +19,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -38,25 +32,8 @@ public class WallMediaServiceImpl
     private static final long MAX_FILE_SIZE =
             100L * 1024L * 1024L;
 
-    private static final Path IMAGE_DIRECTORY =
-            Paths.get(
-                    "uploads",
-                    "wall",
-                    "images"
-            );
-
-    private static final Path VIDEO_DIRECTORY =
-            Paths.get(
-                    "uploads",
-                    "wall",
-                    "videos"
-            );
-
     @Autowired
     private WallMediaRepo wallMediaRepo;
-
-    @Autowired
-    private UserRepo userRepo;
 
     @Autowired
     private CurrentUserService currentUserService;
@@ -79,140 +56,94 @@ public class WallMediaServiceImpl
         User ownerUser =
                 currentUserService
                         .getCurrentOwnerUser();
+
+        String folder =
+                "weddings/owner-"
+                        + ownerUser.getId();
+
         String contentType =
                 file.getContentType();
+
+        String originalFileName =
+                file.getOriginalFilename() != null
+                        ? file.getOriginalFilename()
+                        : "media";
 
         WallMediaType mediaType =
                 resolveMediaType(
                         contentType
                 );
 
-        Path targetDirectory =
-                mediaType == WallMediaType.IMAGE
-                        ? IMAGE_DIRECTORY
-                        : VIDEO_DIRECTORY;
+        Map<String, Object> uploadResult =
+                cloudinaryService
+                        .uploadFile(file, folder);
 
-        try {
+        String cloudinaryUrl =
+                uploadResult
+                        .get("secure_url")
+                        .toString();
 
-            Files.createDirectories(
-                    targetDirectory
-            );
+        String publicId =
+                uploadResult
+                        .get("public_id")
+                        .toString();
 
-            String originalFileName =
-                    file.getOriginalFilename() != null
-                            ? file.getOriginalFilename()
-                            : "media";
+        WallMedia wallMedia =
+                new WallMedia();
 
-            String extension =
-                    getExtension(
-                            originalFileName
-                    );
+        wallMedia.setOriginalFileName(
+                originalFileName
+        );
 
-            String storedFileName =
-                    UUID.randomUUID()
-                            + extension;
+        wallMedia.setStoredFileName(
+                publicId
+        );
 
-            Path targetPath =
-                    targetDirectory
-                            .resolve(
-                                    storedFileName
-                            )
-                            .normalize();
+        wallMedia.setStoragePath(
+                cloudinaryUrl
+        );
 
-//            Files.copy(
-//                    file.getInputStream(),
-//                    targetPath,
-//                    StandardCopyOption.REPLACE_EXISTING
-//            );
+        wallMedia.setPublicId(
+                publicId
+        );
+        wallMedia.setContentType(
+                contentType
+        );
 
-            Map uploadResult =
-                    cloudinaryService
-                            .uploadFile(file);
+        wallMedia.setMediaType(
+                mediaType
+        );
 
-            String cloudinaryUrl =
-                    uploadResult
-                            .get("secure_url")
-                            .toString();
+        wallMedia.setFileSize(
+                file.getSize()
+        );
 
-            String publicId =
-                    uploadResult
-                            .get("public_id")
-                            .toString();
+        wallMedia.setCaption(
+                caption == null
+                        ? ""
+                        : caption.trim()
+        );
 
-            WallMedia wallMedia =
-                    new WallMedia();
+        wallMedia.setUploadedAt(
+                LocalDateTime.now()
+        );
 
-            wallMedia.setOriginalFileName(
-                    originalFileName
-            );
+        wallMedia.setOwnerUser(
+                ownerUser
+        );
 
-            wallMedia.setStoredFileName(
-                    storedFileName
-            );
+        wallMedia.setUploadedBy(
+                currentUser
+        );
 
-//            wallMedia.setStoragePath(
-//                    targetPath.toString()
-//            );
+        WallMedia savedMedia =
+                wallMediaRepo.save(
+                        wallMedia
+                );
 
-            wallMedia.setStoragePath(
-                    cloudinaryUrl
-            );
-
-            wallMedia.setPublicId(
-                    publicId
-            );
-
-            wallMedia.setContentType(
-                    contentType
-            );
-
-            wallMedia.setMediaType(
-                    mediaType
-            );
-
-            wallMedia.setFileSize(
-                    file.getSize()
-            );
-
-            wallMedia.setCaption(
-                    caption == null
-                            ? ""
-                            : caption.trim()
-            );
-
-            wallMedia.setUploadedAt(
-                    LocalDateTime.now()
-            );
-
-            wallMedia.setOwnerUser(
-                    ownerUser
-            );
-
-            wallMedia.setUploadedBy(
-                    currentUser
-            );
-
-            WallMedia savedMedia =
-                    wallMediaRepo.save(
-                            wallMedia
-                    );
-
-            System.out.println(
-                    "CURRENT USER = "
-                            + currentUser.getId()
-            );
-
-            return toDto(
-                    savedMedia
-            );
-
-        } catch (IOException exception) {
-
-            throw new RuntimeException(
-                    "Unable to store wall media",
-                    exception
-            );
-        }
+        return toDto(
+                savedMedia
+        );
     }
 
     @Override
@@ -279,22 +210,6 @@ public class WallMediaServiceImpl
                         mediaId
                 );
 
-//        try {
-//
-//            Files.deleteIfExists(
-//                    Paths.get(
-//                            wallMedia.getStoragePath()
-//                    )
-//            );
-//
-//        } catch (IOException exception) {
-//
-//            throw new RuntimeException(
-//                    "Unable to delete media file",
-//                    exception
-//            );
-//        }
-
         String resourceType =
                 wallMedia.getMediaType()
                         == WallMediaType.VIDEO
@@ -311,10 +226,6 @@ public class WallMediaServiceImpl
                     resourceType
             );
         }
-
-        wallMediaRepo.delete(
-                wallMedia
-        );
 
         wallMediaRepo.delete(
                 wallMedia
@@ -379,26 +290,6 @@ public class WallMediaServiceImpl
         );
     }
 
-    private String getExtension(
-            String fileName
-    ) {
-
-        int extensionIndex =
-                fileName.lastIndexOf('.');
-
-        if (
-                extensionIndex < 0 ||
-                        extensionIndex ==
-                                fileName.length() - 1
-        ) {
-            return "";
-        }
-
-        return fileName.substring(
-                extensionIndex
-        );
-    }
-
     private WallMediaDto toDto(
             WallMedia wallMedia
     ) {
@@ -450,35 +341,6 @@ public class WallMediaServiceImpl
                     WallMedia media
                     : mediaList
             ) {
-
-//                Path path =
-//                        Paths.get(
-//                                media.getStoragePath()
-//                        );
-//
-//                if (
-//                        !Files.exists(
-//                                path
-//                        )
-//                ) {
-//                    continue;
-//                }
-//
-//                ZipEntry zipEntry =
-//                        new ZipEntry(
-//                                media.getOriginalFileName()
-//                        );
-//
-//                zos.putNextEntry(
-//                        zipEntry
-//                );
-//
-//                Files.copy(
-//                        path,
-//                        zos
-//                );
-//
-//                zos.closeEntry();
 
                 try (
 
