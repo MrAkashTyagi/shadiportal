@@ -30,6 +30,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
 import com.bigsquare.ShadiPortal.services.CloudinaryService;
 
 @Service
@@ -47,94 +48,6 @@ public class ExpenseServiceImpl implements ExpenseService {
     @Autowired
     private CurrentUserService currentUserService;
 
-
-//    @Override
-//    public Expense createExpense(
-//            Expense expense,
-//            MultipartFile bill
-//    ) {
-//
-//        Integer userId =
-//                currentUserService
-//                        .getCurrentUserId();
-//
-//
-//        User user =
-//                userRepo.findById(userId)
-//                        .orElseThrow(() ->
-//                                new EntityNotFoundException(
-//                                        "User not found with id: "
-//                                                + userId
-//                                )
-//                        );
-//
-//        expense.setUser(user);
-//
-//        if (
-//                expense.getPaidAmount() != null &&
-//                        expense.getTotalAmount() != null &&
-//                        expense.getPaidAmount().compareTo(
-//                                expense.getTotalAmount()
-//                        ) > 0
-//        ) {
-//
-//            throw new IllegalArgumentException(
-//                    "Paid Amount cannot be greater than Total Amount"
-//            );
-//        }
-//
-//        try {
-//
-//            if (bill != null && !bill.isEmpty()) {
-//
-//                String originalFileName =
-//                        bill.getOriginalFilename();
-//
-//                String safeFileName =
-//                        System.currentTimeMillis()
-//                                + "_"
-//                                + (
-//                                originalFileName != null
-//                                        ? originalFileName
-//                                        : "bill"
-//                        );
-//
-//                Path uploadPath =
-//                        Paths.get(
-//                                "uploads",
-//                                "bills"
-//                        );
-//
-//                Files.createDirectories(
-//                        uploadPath
-//                );
-//
-//                Path filePath =
-//                        uploadPath.resolve(
-//                                safeFileName
-//                        );
-//
-//                bill.transferTo(
-//                        filePath
-//                );
-//
-//                expense.setBillPath(
-//                        filePath.toString()
-//                );
-//            }
-//
-//            return expenseRepo.save(
-//                    expense
-//            );
-//
-//        } catch (IOException exception) {
-//
-//            throw new RuntimeException(
-//                    "Error uploading bill",
-//                    exception
-//            );
-//        }
-//    }
 
     @Override
     public Expense createExpense(
@@ -179,6 +92,8 @@ public class ExpenseServiceImpl implements ExpenseService {
                                         billFolder
                                 );
 
+                System.out.println(uploadResult);
+
                 applyBillMetadata(
                         expense,
                         bill,
@@ -220,257 +135,161 @@ public class ExpenseServiceImpl implements ExpenseService {
         }
     }
 
-//
-//    @Override
-//    public Expense updateExpense(Integer id, Expense expense, MultipartFile bill) {
-//
-//        if (
-//                expense.getPaidAmount() != null &&
-//                        expense.getTotalAmount() != null &&
-//                        expense.getPaidAmount().compareTo(
-//                                expense.getTotalAmount()
-//                        ) > 0
-//        ) {
-//            throw new RuntimeException(
-//                    "Paid Amount cannot be greater than Total Amount"
-//            );
-//        }
-//
-//        Expense existingExpense =
-//                expenseRepo.findById(id)
-//                        .orElseThrow(() ->
-//                                new EntityNotFoundException(
-//                                        "Expense not found with id : " + id
-//                                ));
-//
-//        existingExpense.setExpenseName(
-//                expense.getExpenseName()
-//        );
-//
-//        existingExpense.setCategory(
-//                expense.getCategory()
-//        );
-//
-//        existingExpense.setDescription(
-//                expense.getDescription()
-//        );
-//
-//        existingExpense.setTotalAmount(
-//                expense.getTotalAmount()
-//        );
-//
-//        existingExpense.setPaidAmount(
-//                expense.getPaidAmount()
-//        );
-//
-//        existingExpense.setPaidBy(
-//                expense.getPaidBy()
-//        );
-////
-////        existingExpense.setBillPath(
-////                expense.getBillPath()
-////        );
-//
-//        try {
-//
-//            if (bill != null && !bill.isEmpty()) {
-//
-//                // Purani file delete karo
-//                if (
-//                        existingExpense.getBillPath() != null &&
-//                                !existingExpense.getBillPath().isBlank()
-//                ) {
-//
-//                    Files.deleteIfExists(
-//                            Paths.get(
-//                                    existingExpense.getBillPath()
-//                            )
-//                    );
-//
-//                }
-//
-//                String fileName =
-//                        bill.getOriginalFilename();
-//
-//                Path uploadPath =
-//                        Paths.get("uploads/bills");
-//
-//                Files.createDirectories(uploadPath);
-//
-//                Path filePath =
-//                        uploadPath.resolve(fileName);
-//
-//                bill.transferTo(filePath);
-//
-//                existingExpense.setBillPath(
-//                        filePath.toString()
-//                );
-//            }
-//
-//        } catch (IOException e) {
-//
-//            throw new RuntimeException(
-//                    "Error updating bill",
-//                    e
-//            );
-//
-//        }
-//
-//        existingExpense.setExpenseDate(
-//                expense.getExpenseDate()
-//        );
-//
-//        return expenseRepo.save(existingExpense);
-//    }
+    @Override
+    public Expense updateExpense(
+            Integer id,
+            Expense expense,
+            MultipartFile bill
+    ) {
 
-@Override
-public Expense updateExpense(
-        Integer id,
-        Expense expense,
-        MultipartFile bill
-) {
+        validateAmounts(expense);
 
-    validateAmounts(expense);
+        Expense existingExpense =
+                getOwnedExpense(id);
 
-    Expense existingExpense =
-            getOwnedExpense(id);
+        existingExpense.setExpenseName(
+                expense.getExpenseName()
+        );
 
-    existingExpense.setExpenseName(
-            expense.getExpenseName()
-    );
+        existingExpense.setCategory(
+                expense.getCategory()
+        );
 
-    existingExpense.setCategory(
-            expense.getCategory()
-    );
+        existingExpense.setDescription(
+                expense.getDescription()
+        );
 
-    existingExpense.setDescription(
-            expense.getDescription()
-    );
+        existingExpense.setTotalAmount(
+                expense.getTotalAmount()
+        );
 
-    existingExpense.setTotalAmount(
-            expense.getTotalAmount()
-    );
+        existingExpense.setPaidAmount(
+                expense.getPaidAmount()
+        );
 
-    existingExpense.setPaidAmount(
-            expense.getPaidAmount()
-    );
+        existingExpense.setPaidBy(
+                expense.getPaidBy()
+        );
 
-    existingExpense.setPaidBy(
-            expense.getPaidBy()
-    );
+        existingExpense.setExpenseDate(
+                expense.getExpenseDate()
+        );
 
-    existingExpense.setExpenseDate(
-            expense.getExpenseDate()
-    );
+        boolean replacingBill =
+                bill != null
+                        && !bill.isEmpty();
 
-    boolean replacingBill =
-            bill != null
-                    && !bill.isEmpty();
+        String previousPublicId =
+                existingExpense.getBillPublicId();
 
-    String previousPublicId =
-            existingExpense.getBillPublicId();
+        String previousResourceType =
+                existingExpense.getBillResourceType();
 
-    String previousResourceType =
-            existingExpense.getBillResourceType();
+        String previousBillPath =
+                existingExpense.getBillPath();
 
-    String previousBillPath =
-            existingExpense.getBillPath();
+        Map newUploadResult = null;
 
-    Map newUploadResult = null;
+        try {
 
-    try {
+            if (replacingBill) {
 
-        if (replacingBill) {
+                Integer userId =
+                        currentUserService
+                                .getCurrentUserId();
 
-            Integer userId =
-                    currentUserService
-                            .getCurrentUserId();
+                newUploadResult =
+                        cloudinaryService
+                                .uploadFile(
+                                        bill,
+                                        getBillFolder(userId)
+                                );
+                System.out.println(
+                        
+                        "UPLOAD RESULT = "
 
-            newUploadResult =
-                    cloudinaryService
-                            .uploadFile(
-                                    bill,
-                                    getBillFolder(userId)
-                            );
+                                + newUploadResult
 
-            applyBillMetadata(
-                    existingExpense,
-                    bill,
-                    newUploadResult
-            );
-        }
-
-        Expense savedExpense =
-                expenseRepo.save(
-                        existingExpense
                 );
 
-        if (replacingBill) {
-
-            if (
-                    previousPublicId != null
-                            && !previousPublicId.isBlank()
-            ) {
-
-                cloudinaryService.deleteFile(
-                        previousPublicId,
-                        previousResourceType != null
-                                && !previousResourceType.isBlank()
-                                ? previousResourceType
-                                : "image"
+                applyBillMetadata(
+                        existingExpense,
+                        bill,
+                        newUploadResult
                 );
+            }
 
-            } else if (
-                    previousBillPath != null
-                            && !previousBillPath.isBlank()
-            ) {
+            Expense savedExpense =
+                    expenseRepo.save(
+                            existingExpense
+                    );
+
+            if (replacingBill) {
+
+                if (
+                        previousPublicId != null
+                                && !previousPublicId.isBlank()
+                ) {
+
+                    cloudinaryService.deleteFile(
+                            previousPublicId,
+                            previousResourceType != null
+                                    && !previousResourceType.isBlank()
+                                    ? previousResourceType
+                                    : "image"
+                    );
+
+                } else if (
+                        previousBillPath != null
+                                && !previousBillPath.isBlank()
+                ) {
+
+                    try {
+
+                        java.nio.file.Files
+                                .deleteIfExists(
+                                        java.nio.file.Paths
+                                                .get(
+                                                        previousBillPath
+                                                )
+                                );
+
+                    } catch (Exception exception) {
+
+                        System.err.println(
+                                "Legacy bill file delete nahi hui: "
+                                        + exception.getMessage()
+                        );
+                    }
+                }
+            }
+
+            return savedExpense;
+
+        } catch (RuntimeException exception) {
+
+            if (newUploadResult != null) {
 
                 try {
 
-                    java.nio.file.Files
-                            .deleteIfExists(
-                                    java.nio.file.Paths
-                                            .get(
-                                                    previousBillPath
-                                            )
-                            );
+                    rollbackUpload(
+                            newUploadResult
+                    );
 
-                } catch (Exception exception) {
+                } catch (
+                        RuntimeException
+                                rollbackException
+                ) {
 
-                    System.err.println(
-                            "Legacy bill file delete nahi hui: "
-                                    + exception.getMessage()
+                    exception.addSuppressed(
+                            rollbackException
                     );
                 }
             }
+
+            throw exception;
         }
-
-        return savedExpense;
-
-    } catch (RuntimeException exception) {
-
-        if (newUploadResult != null) {
-
-            try {
-
-                rollbackUpload(
-                        newUploadResult
-                );
-
-            } catch (
-                    RuntimeException
-                            rollbackException
-            ) {
-
-                exception.addSuppressed(
-                        rollbackException
-                );
-            }
-        }
-
-        throw exception;
     }
-}
 
     @Override
     public Expense getExpenseById(Integer id) {
@@ -1028,7 +847,5 @@ public Expense updateExpense(
                         : "image"
         );
     }
-
-
 
 }
