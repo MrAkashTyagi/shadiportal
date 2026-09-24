@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ExpenseRepo extends JpaRepository<Expense, Integer> {
 
@@ -140,6 +141,11 @@ public interface ExpenseRepo extends JpaRepository<Expense, Integer> {
             @Param("userId") Integer userId,
             @Param("search") String search,
             @Param("category") String category
+    );
+
+    Optional<Expense> findByIdAndUserId(
+            Integer id,
+            Integer userId
     );
 
 }
