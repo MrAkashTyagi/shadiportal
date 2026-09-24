@@ -30,6 +30,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import com.bigsquare.ShadiPortal.services.CloudinaryService;
 
 @Service
 public class ExpenseServiceImpl implements ExpenseService {
@@ -38,11 +39,102 @@ public class ExpenseServiceImpl implements ExpenseService {
     private ExpenseRepo expenseRepo;
 
     @Autowired
+    private CloudinaryService cloudinaryService;
+
+    @Autowired
     private UserRepo userRepo;
 
     @Autowired
     private CurrentUserService currentUserService;
 
+
+//    @Override
+//    public Expense createExpense(
+//            Expense expense,
+//            MultipartFile bill
+//    ) {
+//
+//        Integer userId =
+//                currentUserService
+//                        .getCurrentUserId();
+//
+//
+//        User user =
+//                userRepo.findById(userId)
+//                        .orElseThrow(() ->
+//                                new EntityNotFoundException(
+//                                        "User not found with id: "
+//                                                + userId
+//                                )
+//                        );
+//
+//        expense.setUser(user);
+//
+//        if (
+//                expense.getPaidAmount() != null &&
+//                        expense.getTotalAmount() != null &&
+//                        expense.getPaidAmount().compareTo(
+//                                expense.getTotalAmount()
+//                        ) > 0
+//        ) {
+//
+//            throw new IllegalArgumentException(
+//                    "Paid Amount cannot be greater than Total Amount"
+//            );
+//        }
+//
+//        try {
+//
+//            if (bill != null && !bill.isEmpty()) {
+//
+//                String originalFileName =
+//                        bill.getOriginalFilename();
+//
+//                String safeFileName =
+//                        System.currentTimeMillis()
+//                                + "_"
+//                                + (
+//                                originalFileName != null
+//                                        ? originalFileName
+//                                        : "bill"
+//                        );
+//
+//                Path uploadPath =
+//                        Paths.get(
+//                                "uploads",
+//                                "bills"
+//                        );
+//
+//                Files.createDirectories(
+//                        uploadPath
+//                );
+//
+//                Path filePath =
+//                        uploadPath.resolve(
+//                                safeFileName
+//                        );
+//
+//                bill.transferTo(
+//                        filePath
+//                );
+//
+//                expense.setBillPath(
+//                        filePath.toString()
+//                );
+//            }
+//
+//            return expenseRepo.save(
+//                    expense
+//            );
+//
+//        } catch (IOException exception) {
+//
+//            throw new RuntimeException(
+//                    "Error uploading bill",
+//                    exception
+//            );
+//        }
+//    }
 
     @Override
     public Expense createExpense(
@@ -54,9 +146,9 @@ public class ExpenseServiceImpl implements ExpenseService {
                 currentUserService
                         .getCurrentUserId();
 
-
         User user =
-                userRepo.findById(userId)
+                userRepo
+                        .findById(userId)
                         .orElseThrow(() ->
                                 new EntityNotFoundException(
                                         "User not found with id: "
@@ -64,58 +156,33 @@ public class ExpenseServiceImpl implements ExpenseService {
                                 )
                         );
 
+        validateAmounts(expense);
+
         expense.setUser(user);
 
-        if (
-                expense.getPaidAmount() != null &&
-                        expense.getTotalAmount() != null &&
-                        expense.getPaidAmount().compareTo(
-                                expense.getTotalAmount()
-                        ) > 0
-        ) {
-
-            throw new IllegalArgumentException(
-                    "Paid Amount cannot be greater than Total Amount"
-            );
-        }
+        Map uploadResult = null;
 
         try {
 
-            if (bill != null && !bill.isEmpty()) {
+            if (
+                    bill != null
+                            && !bill.isEmpty()
+            ) {
 
-                String originalFileName =
-                        bill.getOriginalFilename();
+                String billFolder =
+                        getBillFolder(userId);
 
-                String safeFileName =
-                        System.currentTimeMillis()
-                                + "_"
-                                + (
-                                originalFileName != null
-                                        ? originalFileName
-                                        : "bill"
-                        );
+                uploadResult =
+                        cloudinaryService
+                                .uploadFile(
+                                        bill,
+                                        billFolder
+                                );
 
-                Path uploadPath =
-                        Paths.get(
-                                "uploads",
-                                "bills"
-                        );
-
-                Files.createDirectories(
-                        uploadPath
-                );
-
-                Path filePath =
-                        uploadPath.resolve(
-                                safeFileName
-                        );
-
-                bill.transferTo(
-                        filePath
-                );
-
-                expense.setBillPath(
-                        filePath.toString()
+                applyBillMetadata(
+                        expense,
+                        bill,
+                        uploadResult
                 );
             }
 
@@ -123,117 +190,287 @@ public class ExpenseServiceImpl implements ExpenseService {
                     expense
             );
 
-        } catch (IOException exception) {
+        } catch (RuntimeException exception) {
 
-            throw new RuntimeException(
-                    "Error uploading bill",
-                    exception
-            );
-        }
-    }
+            /*
+             * Cloudinary upload ho gaya,
+             * lekin database save fail hua,
+             * to uploaded file rollback kar do.
+             */
+            if (uploadResult != null) {
 
+                try {
 
-    @Override
-    public Expense updateExpense(Integer id, Expense expense, MultipartFile bill) {
-
-        if (
-                expense.getPaidAmount() != null &&
-                        expense.getTotalAmount() != null &&
-                        expense.getPaidAmount().compareTo(
-                                expense.getTotalAmount()
-                        ) > 0
-        ) {
-            throw new RuntimeException(
-                    "Paid Amount cannot be greater than Total Amount"
-            );
-        }
-
-        Expense existingExpense =
-                expenseRepo.findById(id)
-                        .orElseThrow(() ->
-                                new EntityNotFoundException(
-                                        "Expense not found with id : " + id
-                                ));
-
-        existingExpense.setExpenseName(
-                expense.getExpenseName()
-        );
-
-        existingExpense.setCategory(
-                expense.getCategory()
-        );
-
-        existingExpense.setDescription(
-                expense.getDescription()
-        );
-
-        existingExpense.setTotalAmount(
-                expense.getTotalAmount()
-        );
-
-        existingExpense.setPaidAmount(
-                expense.getPaidAmount()
-        );
-
-        existingExpense.setPaidBy(
-                expense.getPaidBy()
-        );
-//
-//        existingExpense.setBillPath(
-//                expense.getBillPath()
-//        );
-
-        try {
-
-            if (bill != null && !bill.isEmpty()) {
-
-                // Purani file delete karo
-                if (
-                        existingExpense.getBillPath() != null &&
-                                !existingExpense.getBillPath().isBlank()
-                ) {
-
-                    Files.deleteIfExists(
-                            Paths.get(
-                                    existingExpense.getBillPath()
-                            )
+                    rollbackUpload(
+                            uploadResult
                     );
 
+                } catch (
+                        RuntimeException
+                                rollbackException
+                ) {
+
+                    exception.addSuppressed(
+                            rollbackException
+                    );
                 }
-
-                String fileName =
-                        bill.getOriginalFilename();
-
-                Path uploadPath =
-                        Paths.get("uploads/bills");
-
-                Files.createDirectories(uploadPath);
-
-                Path filePath =
-                        uploadPath.resolve(fileName);
-
-                bill.transferTo(filePath);
-
-                existingExpense.setBillPath(
-                        filePath.toString()
-                );
             }
 
-        } catch (IOException e) {
+            throw exception;
+        }
+    }
 
-            throw new RuntimeException(
-                    "Error updating bill",
-                    e
+//
+//    @Override
+//    public Expense updateExpense(Integer id, Expense expense, MultipartFile bill) {
+//
+//        if (
+//                expense.getPaidAmount() != null &&
+//                        expense.getTotalAmount() != null &&
+//                        expense.getPaidAmount().compareTo(
+//                                expense.getTotalAmount()
+//                        ) > 0
+//        ) {
+//            throw new RuntimeException(
+//                    "Paid Amount cannot be greater than Total Amount"
+//            );
+//        }
+//
+//        Expense existingExpense =
+//                expenseRepo.findById(id)
+//                        .orElseThrow(() ->
+//                                new EntityNotFoundException(
+//                                        "Expense not found with id : " + id
+//                                ));
+//
+//        existingExpense.setExpenseName(
+//                expense.getExpenseName()
+//        );
+//
+//        existingExpense.setCategory(
+//                expense.getCategory()
+//        );
+//
+//        existingExpense.setDescription(
+//                expense.getDescription()
+//        );
+//
+//        existingExpense.setTotalAmount(
+//                expense.getTotalAmount()
+//        );
+//
+//        existingExpense.setPaidAmount(
+//                expense.getPaidAmount()
+//        );
+//
+//        existingExpense.setPaidBy(
+//                expense.getPaidBy()
+//        );
+////
+////        existingExpense.setBillPath(
+////                expense.getBillPath()
+////        );
+//
+//        try {
+//
+//            if (bill != null && !bill.isEmpty()) {
+//
+//                // Purani file delete karo
+//                if (
+//                        existingExpense.getBillPath() != null &&
+//                                !existingExpense.getBillPath().isBlank()
+//                ) {
+//
+//                    Files.deleteIfExists(
+//                            Paths.get(
+//                                    existingExpense.getBillPath()
+//                            )
+//                    );
+//
+//                }
+//
+//                String fileName =
+//                        bill.getOriginalFilename();
+//
+//                Path uploadPath =
+//                        Paths.get("uploads/bills");
+//
+//                Files.createDirectories(uploadPath);
+//
+//                Path filePath =
+//                        uploadPath.resolve(fileName);
+//
+//                bill.transferTo(filePath);
+//
+//                existingExpense.setBillPath(
+//                        filePath.toString()
+//                );
+//            }
+//
+//        } catch (IOException e) {
+//
+//            throw new RuntimeException(
+//                    "Error updating bill",
+//                    e
+//            );
+//
+//        }
+//
+//        existingExpense.setExpenseDate(
+//                expense.getExpenseDate()
+//        );
+//
+//        return expenseRepo.save(existingExpense);
+//    }
+
+@Override
+public Expense updateExpense(
+        Integer id,
+        Expense expense,
+        MultipartFile bill
+) {
+
+    validateAmounts(expense);
+
+    Expense existingExpense =
+            getOwnedExpense(id);
+
+    existingExpense.setExpenseName(
+            expense.getExpenseName()
+    );
+
+    existingExpense.setCategory(
+            expense.getCategory()
+    );
+
+    existingExpense.setDescription(
+            expense.getDescription()
+    );
+
+    existingExpense.setTotalAmount(
+            expense.getTotalAmount()
+    );
+
+    existingExpense.setPaidAmount(
+            expense.getPaidAmount()
+    );
+
+    existingExpense.setPaidBy(
+            expense.getPaidBy()
+    );
+
+    existingExpense.setExpenseDate(
+            expense.getExpenseDate()
+    );
+
+    boolean replacingBill =
+            bill != null
+                    && !bill.isEmpty();
+
+    String previousPublicId =
+            existingExpense.getBillPublicId();
+
+    String previousResourceType =
+            existingExpense.getBillResourceType();
+
+    String previousBillPath =
+            existingExpense.getBillPath();
+
+    Map newUploadResult = null;
+
+    try {
+
+        if (replacingBill) {
+
+            Integer userId =
+                    currentUserService
+                            .getCurrentUserId();
+
+            newUploadResult =
+                    cloudinaryService
+                            .uploadFile(
+                                    bill,
+                                    getBillFolder(userId)
+                            );
+
+            applyBillMetadata(
+                    existingExpense,
+                    bill,
+                    newUploadResult
             );
-
         }
 
-        existingExpense.setExpenseDate(
-                expense.getExpenseDate()
-        );
+        Expense savedExpense =
+                expenseRepo.save(
+                        existingExpense
+                );
 
-        return expenseRepo.save(existingExpense);
+        if (replacingBill) {
+
+            if (
+                    previousPublicId != null
+                            && !previousPublicId.isBlank()
+            ) {
+
+                cloudinaryService.deleteFile(
+                        previousPublicId,
+                        previousResourceType != null
+                                && !previousResourceType.isBlank()
+                                ? previousResourceType
+                                : "image"
+                );
+
+            } else if (
+                    previousBillPath != null
+                            && !previousBillPath.isBlank()
+            ) {
+
+                try {
+
+                    java.nio.file.Files
+                            .deleteIfExists(
+                                    java.nio.file.Paths
+                                            .get(
+                                                    previousBillPath
+                                            )
+                            );
+
+                } catch (Exception exception) {
+
+                    System.err.println(
+                            "Legacy bill file delete nahi hui: "
+                                    + exception.getMessage()
+                    );
+                }
+            }
+        }
+
+        return savedExpense;
+
+    } catch (RuntimeException exception) {
+
+        if (newUploadResult != null) {
+
+            try {
+
+                rollbackUpload(
+                        newUploadResult
+                );
+
+            } catch (
+                    RuntimeException
+                            rollbackException
+            ) {
+
+                exception.addSuppressed(
+                        rollbackException
+                );
+            }
+        }
+
+        throw exception;
     }
+}
 
     @Override
     public Expense getExpenseById(Integer id) {
@@ -592,6 +829,180 @@ public class ExpenseServiceImpl implements ExpenseService {
                 ))
                 .toList();
     }
+
+    private void validateAmounts(
+            Expense expense
+    ) {
+
+        if (
+                expense.getPaidAmount() != null
+                        && expense.getTotalAmount() != null
+                        && expense.getPaidAmount()
+                        .compareTo(
+                                expense.getTotalAmount()
+                        ) > 0
+        ) {
+
+            throw new IllegalArgumentException(
+                    "Paid Amount cannot be greater "
+                            + "than Total Amount"
+            );
+        }
+    }
+
+    private Expense getOwnedExpense(
+            Integer expenseId
+    ) {
+
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
+
+        return expenseRepo
+                .findByIdAndUserId(
+                        expenseId,
+                        userId
+                )
+                .orElseThrow(() ->
+                        new EntityNotFoundException(
+                                "Expense not found with id: "
+                                        + expenseId
+                        )
+                );
+    }
+
+    private String getBillFolder(
+            Integer userId
+    ) {
+
+        return "users/"
+                + userId
+                + "/bills";
+    }
+
+    private void applyBillMetadata(
+            Expense expense,
+            MultipartFile bill,
+            Map uploadResult
+    ) {
+
+        Object secureUrl =
+                uploadResult.get(
+                        "secure_url"
+                );
+
+        Object publicId =
+                uploadResult.get(
+                        "public_id"
+                );
+
+        Object resourceType =
+                uploadResult.get(
+                        "resource_type"
+                );
+
+        if (secureUrl == null || publicId == null) {
+
+            throw new IllegalStateException(
+                    "Cloudinary upload response is incomplete"
+            );
+        }
+
+        expense.setBillUrl(
+                String.valueOf(secureUrl)
+        );
+
+        expense.setBillPublicId(
+                String.valueOf(publicId)
+        );
+
+        expense.setBillResourceType(
+                resourceType != null
+                        ? String.valueOf(
+                        resourceType
+                )
+                        : "image"
+        );
+
+        expense.setBillOriginalName(
+                bill.getOriginalFilename()
+        );
+
+        expense.setBillContentType(
+                bill.getContentType()
+        );
+
+        /*
+         * Compatibility stage:
+         * new Cloudinary records ke liye local path null.
+         */
+        expense.setBillPath(null);
+    }
+
+    private boolean hasCloudinaryBill(
+            Expense expense
+    ) {
+
+        return expense.getBillPublicId() != null
+                && !expense.getBillPublicId()
+                .isBlank();
+    }
+
+    private void deleteCloudinaryBill(
+            Expense expense
+    ) {
+
+        if (!hasCloudinaryBill(expense)) {
+            return;
+        }
+
+        String resourceType =
+                expense.getBillResourceType();
+
+        if (
+                resourceType == null
+                        || resourceType.isBlank()
+        ) {
+
+            resourceType = "image";
+        }
+
+        cloudinaryService.deleteFile(
+                expense.getBillPublicId(),
+                resourceType
+        );
+    }
+
+    private void rollbackUpload(
+            Map uploadResult
+    ) {
+
+        if (uploadResult == null) {
+            return;
+        }
+
+        Object publicId =
+                uploadResult.get(
+                        "public_id"
+                );
+
+        if (publicId == null) {
+            return;
+        }
+
+        Object resourceType =
+                uploadResult.get(
+                        "resource_type"
+                );
+
+        cloudinaryService.deleteFile(
+                String.valueOf(publicId),
+                resourceType != null
+                        ? String.valueOf(resourceType)
+                        : "image"
+        );
+    }
+
 
 
 }
