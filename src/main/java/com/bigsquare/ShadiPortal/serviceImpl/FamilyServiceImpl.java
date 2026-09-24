@@ -79,7 +79,11 @@ public class FamilyServiceImpl implements FamilyService {
                         );
 
         if (existingFamily.isPresent()) {
-            return existingFamily.get();
+
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Family already exists"
+            );
         }
 
         Family family = new Family();
