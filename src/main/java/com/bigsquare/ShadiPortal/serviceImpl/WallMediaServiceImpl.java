@@ -58,8 +58,9 @@ public class WallMediaServiceImpl
                         .getCurrentOwnerUser();
 
         String folder =
-                "weddings/owner-"
-                        + ownerUser.getId();
+                "users/"
+                        + ownerUser.getId()
+                        + "/media";
 
         String contentType =
                 file.getContentType();
