@@ -5,23 +5,23 @@ import com.bigsquare.ShadiPortal.dto.ExpenseSummaryDto;
 import com.bigsquare.ShadiPortal.entities.Expense;
 import com.bigsquare.ShadiPortal.services.ExpenseService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.net.URI;
 
-import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.util.List;
 
 @RestController
@@ -79,7 +79,8 @@ public class ExpenseController {
 //
 //        try {
 //
-////            ObjectMapper mapper = new ObjectMapper();
+
+    /// /            ObjectMapper mapper = new ObjectMapper();
 //
 //            ObjectMapper mapper = new ObjectMapper();
 //            mapper.findAndRegisterModules();
@@ -105,74 +106,72 @@ public class ExpenseController {
 //
 //        }
 //    }
+    @PostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public Expense createExpense(
+            @RequestPart("expense") String expenseJson,
+            @RequestPart(
+                    value = "bill",
+                    required = false
+            ) MultipartFile bill
+    ) {
 
+        try {
 
-@PostMapping(
-        consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-)
-public Expense createExpense(
-        @RequestPart("expense") String expenseJson,
-        @RequestPart(
-                value = "bill",
-                required = false
-        ) MultipartFile bill
-) {
+            ObjectMapper mapper = new ObjectMapper();
 
-    try {
+            mapper.findAndRegisterModules();
 
-        ObjectMapper mapper = new ObjectMapper();
+            Expense expense =
+                    mapper.readValue(
+                            expenseJson,
+                            Expense.class
+                    );
 
-        mapper.findAndRegisterModules();
+            return expenseService.createExpense(
+                    expense,
+                    bill
+            );
 
-        Expense expense =
-                mapper.readValue(
-                        expenseJson,
-                        Expense.class
-                );
+        } catch (Exception exception) {
 
-        return expenseService.createExpense(
-                expense,
-                bill
-        );
-
-    } catch (Exception exception) {
-
-        throw new RuntimeException(
-                "Error while creating expense",
-                exception
-        );
+            throw new RuntimeException(
+                    "Error while creating expense",
+                    exception
+            );
+        }
     }
-}
 
 
     @GetMapping("/bill/{id}")
-    public ResponseEntity<Resource> viewBill(
+    public ResponseEntity<byte[]> viewBill(
             @PathVariable Integer id
-    ) throws Exception {
+    ) {
 
         Expense expense =
-                expenseService.getExpenseById(id);
+                expenseService
+                        .getExpenseById(id);
 
-        Path filePath =
-                Paths.get(expense.getBillPath());
+        byte[] billData =
+                fetchCloudinaryBill(
+                        expense
+                );
 
-        Resource resource =
-                new UrlResource(filePath.toUri());
-
-        String contentType =
-                Files.probeContentType(filePath);
-
-        return ResponseEntity.ok()
+        return ResponseEntity
+                .ok()
                 .contentType(
-                        MediaType.parseMediaType(
-                                contentType != null
-                                        ? contentType
-                                        : MediaType.APPLICATION_OCTET_STREAM_VALUE
+                        resolveBillContentType(
+                                expense
                         )
                 )
-                .body(resource);
+                .contentLength(
+                        billData.length
+                )
+                .body(
+                        billData
+                );
     }
-
     // Update Expense
 //    @PutMapping("/{id}")
 //    public Expense updateExpense(
@@ -295,26 +294,43 @@ public Expense createExpense(
 
 
     @GetMapping("/bill/download/{id}")
-    public ResponseEntity<Resource> downloadBill(
+    public ResponseEntity<byte[]> downloadBill(
             @PathVariable Integer id
-    ) throws Exception {
+    ) {
 
         Expense expense =
-                expenseService.getExpenseById(id);
+                expenseService
+                        .getExpenseById(id);
 
-        Path filePath =
-                Paths.get(expense.getBillPath());
+        byte[] billData =
+                fetchCloudinaryBill(
+                        expense
+                );
 
-        Resource resource =
-                new UrlResource(filePath.toUri());
+        String fileName =
+                resolveBillFileName(
+                        expense
+                );
 
-        return ResponseEntity.ok()
+        return ResponseEntity
+                .ok()
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=" +
-                                filePath.getFileName().toString()
+                        "attachment; filename=\""
+                                + fileName
+                                + "\""
                 )
-                .body(resource);
+                .contentType(
+                        resolveBillContentType(
+                                expense
+                        )
+                )
+                .contentLength(
+                        billData.length
+                )
+                .body(
+                        billData
+                );
     }
 
     @GetMapping("/summary")
@@ -334,5 +350,106 @@ public Expense createExpense(
 
         return expenseService
                 .getExpenseCategorySummary();
+    }
+
+    private byte[] fetchCloudinaryBill(
+            Expense expense
+    ) {
+
+        if (
+                expense.getBillUrl() == null
+                        || expense.getBillUrl()
+                        .isBlank()
+        ) {
+
+            throw new IllegalStateException(
+                    "Bill URL is not available"
+            );
+        }
+
+        try (
+                InputStream inputStream =
+                        URI.create(
+                                        expense.getBillUrl()
+                                )
+                                .toURL()
+                                .openStream();
+
+                ByteArrayOutputStream outputStream =
+                        new ByteArrayOutputStream()
+        ) {
+
+            inputStream.transferTo(
+                    outputStream
+            );
+
+            return outputStream.toByteArray();
+
+        } catch (Exception exception) {
+
+            throw new RuntimeException(
+                    "Cloudinary bill fetch failed",
+                    exception
+            );
+        }
+    }
+
+    private MediaType resolveBillContentType(
+            Expense expense
+    ) {
+
+        String contentType =
+                expense.getBillContentType();
+
+        if (
+                contentType == null
+                        || contentType.isBlank()
+        ) {
+
+            return MediaType
+                    .APPLICATION_OCTET_STREAM;
+        }
+
+        try {
+
+            return MediaType.parseMediaType(
+                    contentType
+            );
+
+        } catch (Exception exception) {
+
+            return MediaType
+                    .APPLICATION_OCTET_STREAM;
+        }
+    }
+
+    private String resolveBillFileName(
+            Expense expense
+    ) {
+
+        String originalName =
+                expense.getBillOriginalName();
+
+        if (
+                originalName == null
+                        || originalName.isBlank()
+        ) {
+
+            return "bill";
+        }
+
+        return originalName
+                .replace(
+                        "\"",
+                        ""
+                )
+                .replace(
+                        "\r",
+                        ""
+                )
+                .replace(
+                        "\n",
+                        ""
+                );
     }
 }
