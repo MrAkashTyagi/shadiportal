@@ -43,5 +43,16 @@ public class Expense {
     })
     private User user;
 
+    @Column(length = 1000)
+    private String billUrl;
+
+    @Column(length = 500)
+    private String billPublicId;
+
+    private String billResourceType;
+
+    private String billOriginalName;
+
+    private String billContentType;
 
 }
