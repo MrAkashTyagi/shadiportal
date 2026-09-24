@@ -525,38 +525,64 @@ public Expense updateExpense(
     }
 
     @Override
-    public void deleteExpense(Integer id) {
+    public void deleteExpense(
+            Integer id
+    ) {
 
         Expense expense =
-                expenseRepo.findById(id)
-                        .orElseThrow(
-                                () -> new RuntimeException("Expense not found")
-                        );
+                getOwnedExpense(id);
 
         try {
 
-            if (
-                    expense.getBillPath() != null &&
-                            !expense.getBillPath().isBlank()
-            ) {
+            /*
+             * New Cloudinary bills
+             */
+            if (hasCloudinaryBill(expense)) {
 
-                Path filePath =
-                        Paths.get(expense.getBillPath());
-
-                Files.deleteIfExists(filePath);
+                deleteCloudinaryBill(
+                        expense
+                );
 
             }
 
-        } catch (Exception e) {
+            /*
+             * Legacy local bills
+             */
+            else if (
+                    expense.getBillPath() != null
+                            && !expense.getBillPath().isBlank()
+            ) {
 
-            System.err.println(
-                    "Unable to delete bill file: "
-                            + e.getMessage()
+                try {
+
+                    java.nio.file.Files
+                            .deleteIfExists(
+                                    java.nio.file.Paths
+                                            .get(
+                                                    expense.getBillPath()
+                                            )
+                            );
+
+                } catch (Exception exception) {
+
+                    System.err.println(
+                            "Legacy file delete failed: "
+                                    + exception.getMessage()
+                    );
+                }
+            }
+
+            expenseRepo.delete(
+                    expense
             );
 
-        }
+        } catch (RuntimeException exception) {
 
-        expenseRepo.delete(expense);
+            throw new RuntimeException(
+                    "Expense delete failed",
+                    exception
+            );
+        }
     }
 
     @Override
