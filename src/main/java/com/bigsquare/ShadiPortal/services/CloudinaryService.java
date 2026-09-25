@@ -21,13 +21,22 @@ public class CloudinaryService {
     ) {
 
         try {
+
+            String resourceType = "auto";
+
+            if ("application/pdf".equalsIgnoreCase(
+                    file.getContentType()
+            )) {
+                resourceType = "raw";
+            }
+
             return cloudinary
                     .uploader()
                     .upload(
                             file.getBytes(),
                             ObjectUtils.asMap(
                                     "resource_type",
-                                    "auto",
+                                    resourceType,
                                     "folder",
                                     folder
                             )
@@ -41,6 +50,33 @@ public class CloudinaryService {
             );
         }
     }
+
+//    public Map uploadFile(
+//            MultipartFile file,
+//            String folder
+//    ) {
+//
+//        try {
+//            return cloudinary
+//                    .uploader()
+//                    .upload(
+//                            file.getBytes(),
+//                            ObjectUtils.asMap(
+//                                    "resource_type",
+//                                    "auto",
+//                                    "folder",
+//                                    folder
+//                            )
+//                    );
+//
+//        } catch (IOException exception) {
+//
+//            throw new RuntimeException(
+//                    "Cloudinary upload failed",
+//                    exception
+//            );
+//        }
+//    }
 
     public void deleteFile(
             String publicId,
