@@ -11,14 +11,16 @@ import java.util.List;
 public interface ExpenseService {
 
     // Create
-
     Expense createExpense(
             Expense expense,
-            MultipartFile bill
+            MultipartFile[] bills
     );
 
-    // Update
-    Expense updateExpense(Integer id, Expense expense, MultipartFile bill);
+    Expense updateExpense(
+            Integer id,
+            Expense expense,
+            MultipartFile[] bills
+    );
 
     // Get By Id
     Expense getExpenseById(Integer id);
