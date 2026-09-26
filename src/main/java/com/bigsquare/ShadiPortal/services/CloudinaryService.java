@@ -8,7 +8,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Map;
-
 @Service
 public class CloudinaryService {
 
@@ -22,12 +21,25 @@ public class CloudinaryService {
 
         try {
 
-            String resourceType = "auto";
+            String contentType =
+                    file.getContentType();
 
-            if ("application/pdf".equalsIgnoreCase(
-                    file.getContentType()
-            )) {
-                resourceType = "raw";
+            if (
+                    contentType == null
+                            || (
+                            !contentType.equalsIgnoreCase(
+                                    "image/jpeg"
+                            )
+                                    &&
+                                    !contentType.equalsIgnoreCase(
+                                            "image/png"
+                                    )
+                    )
+            ) {
+
+                throw new IllegalArgumentException(
+                        "Only JPG, JPEG and PNG files are allowed."
+                );
             }
 
             return cloudinary
@@ -36,7 +48,7 @@ public class CloudinaryService {
                             file.getBytes(),
                             ObjectUtils.asMap(
                                     "resource_type",
-                                    resourceType,
+                                    "image",
                                     "folder",
                                     folder
                             )
@@ -50,33 +62,6 @@ public class CloudinaryService {
             );
         }
     }
-
-//    public Map uploadFile(
-//            MultipartFile file,
-//            String folder
-//    ) {
-//
-//        try {
-//            return cloudinary
-//                    .uploader()
-//                    .upload(
-//                            file.getBytes(),
-//                            ObjectUtils.asMap(
-//                                    "resource_type",
-//                                    "auto",
-//                                    "folder",
-//                                    folder
-//                            )
-//                    );
-//
-//        } catch (IOException exception) {
-//
-//            throw new RuntimeException(
-//                    "Cloudinary upload failed",
-//                    exception
-//            );
-//        }
-//    }
 
     public void deleteFile(
             String publicId,
