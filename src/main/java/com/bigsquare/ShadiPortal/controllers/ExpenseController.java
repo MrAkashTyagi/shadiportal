@@ -32,89 +32,15 @@ public class ExpenseController {
     @Autowired
     private ExpenseService expenseService;
 
-//    // Create Expense
-//    @PostMapping(
-//            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-//    )
-//    public Expense createExpense(
-//            @RequestPart("expense") Expense expense,
-//            @RequestPart(
-//                    value = "bill",
-//                    required = false
-//            ) MultipartFile bill
-//    ) {
-//        return expenseService.createExpense(
-//                expense,
-//                bill
-//        );
-//    }
-//
-//    @PostMapping(
-//            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-//    )
-//    public String createExpense(
-//            @RequestPart("expense") String expense,
-//            @RequestPart(
-//                    value = "bill",
-//                    required = false
-//            ) MultipartFile bill
-//    ) {
-//
-//        System.out.println(expense);
-//
-//        return "Success";
-//    }
-
-
-//    @PostMapping(
-//            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-//    )
-//    public Expense createExpense(
-//            @RequestPart("expense") String expenseJson,
-//            @RequestPart(
-//                    value = "bill",
-//                    required = false
-//            ) MultipartFile bill
-//    ) {
-//
-//        try {
-//
-
-    /// /            ObjectMapper mapper = new ObjectMapper();
-//
-//            ObjectMapper mapper = new ObjectMapper();
-//            mapper.findAndRegisterModules();
-//            Expense expense =
-//                    new ObjectMapper()
-//                            .findAndRegisterModules()
-//                            .readValue(
-//                                    expenseJson,
-//                                    Expense.class
-//                            );
-//
-//            return expenseService.createExpense(
-//                    expense,
-//                    bill
-//            );
-//
-//        } catch (Exception e) {
-//
-//            throw new RuntimeException(
-//                    "Error while creating expense",
-//                    e
-//            );
-//
-//        }
-//    }
     @PostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public Expense createExpense(
             @RequestPart("expense") String expenseJson,
             @RequestPart(
-                    value = "bill",
+                    value = "bills",
                     required = false
-            ) MultipartFile bill
+            ) MultipartFile[] bills
     ) {
 
         try {
@@ -131,7 +57,7 @@ public class ExpenseController {
 
             return expenseService.createExpense(
                     expense,
-                    bill
+                    bills
             );
 
         } catch (Exception exception) {
@@ -144,7 +70,7 @@ public class ExpenseController {
     }
 
 
-    @GetMapping("/bill/{id}")
+    @GetMapping("/{expenseId}/bills")
     public ResponseEntity<byte[]> viewBill(
             @PathVariable Integer id
     ) {
@@ -189,9 +115,9 @@ public class ExpenseController {
             @PathVariable Integer id,
             @RequestPart("expense") String expenseJson,
             @RequestPart(
-                    value = "bill",
+                    value = "bills",
                     required = false
-            ) MultipartFile bill
+            ) MultipartFile[] bills
     ) {
 
         try {
@@ -208,7 +134,7 @@ public class ExpenseController {
             return expenseService.updateExpense(
                     id,
                     expense,
-                    bill
+                    bills
             );
 
         } catch (Exception e) {
@@ -358,8 +284,7 @@ public class ExpenseController {
 
         if (
                 expense.getBillUrl() == null
-                        || expense.getBillUrl()
-                        .isBlank()
+                        || expense.getBillUrl().isBlank()
         ) {
 
             throw new IllegalStateException(
@@ -387,13 +312,15 @@ public class ExpenseController {
 
         } catch (Exception exception) {
 
+            // 👇 Ye add kar
+            exception.printStackTrace();
+
             throw new RuntimeException(
                     "Cloudinary bill fetch failed",
                     exception
             );
         }
     }
-
     private MediaType resolveBillContentType(
             Expense expense
     ) {
