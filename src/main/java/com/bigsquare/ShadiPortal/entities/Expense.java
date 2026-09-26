@@ -7,7 +7,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Getter
@@ -54,5 +56,15 @@ public class Expense {
     private String billOriginalName;
 
     private String billContentType;
+
+    @OneToMany(
+            mappedBy = "expense",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @OrderBy("id ASC")
+    private List<ExpenseBill> bills =
+            new ArrayList<>();
+
 
 }
