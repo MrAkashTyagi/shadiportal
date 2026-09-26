@@ -3,6 +3,7 @@ package com.bigsquare.ShadiPortal.controllers;
 import com.bigsquare.ShadiPortal.dto.ExpenseCategorySummaryDto;
 import com.bigsquare.ShadiPortal.dto.ExpenseSummaryDto;
 import com.bigsquare.ShadiPortal.entities.Expense;
+import com.bigsquare.ShadiPortal.entities.ExpenseBill;
 import com.bigsquare.ShadiPortal.services.ExpenseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -70,34 +71,34 @@ public class ExpenseController {
     }
 
 
-    @GetMapping("/{expenseId}/bills")
-    public ResponseEntity<byte[]> viewBill(
-            @PathVariable Integer id
-    ) {
-
-        Expense expense =
-                expenseService
-                        .getExpenseById(id);
-
-        byte[] billData =
-                fetchCloudinaryBill(
-                        expense
-                );
-
-        return ResponseEntity
-                .ok()
-                .contentType(
-                        resolveBillContentType(
-                                expense
-                        )
-                )
-                .contentLength(
-                        billData.length
-                )
-                .body(
-                        billData
-                );
-    }
+//    @GetMapping("/{expenseId}/bills")
+//    public ResponseEntity<byte[]> viewBill(
+//            @PathVariable Integer id
+//    ) {
+//
+//        Expense expense =
+//                expenseService
+//                        .getExpenseById(id);
+//
+//        byte[] billData =
+//                fetchCloudinaryBill(
+//                        expense
+//                );
+//
+//        return ResponseEntity
+//                .ok()
+//                .contentType(
+//                        resolveBillContentType(
+//                                expense
+//                        )
+//                )
+//                .contentLength(
+//                        billData.length
+//                )
+//                .body(
+//                        billData
+//                );
+//    }
     // Update Expense
 //    @PutMapping("/{id}")
 //    public Expense updateExpense(
@@ -378,5 +379,18 @@ public class ExpenseController {
                         "\n",
                         ""
                 );
+    }
+
+    @GetMapping("/{expenseId}/bills")
+    public List<ExpenseBill> getExpenseBills(
+            @PathVariable Integer expenseId
+    ) {
+
+        Expense expense =
+                expenseService.getExpenseById(
+                        expenseId
+                );
+
+        return expense.getBills();
     }
 }
