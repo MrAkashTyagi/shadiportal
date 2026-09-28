@@ -4,9 +4,11 @@ import com.bigsquare.ShadiPortal.dto.ExpenseCategorySummaryDto;
 import com.bigsquare.ShadiPortal.dto.ExpenseSummaryDto;
 import com.bigsquare.ShadiPortal.entities.Expense;
 import com.bigsquare.ShadiPortal.entities.User;
+import com.bigsquare.ShadiPortal.repositories.ExpenseBillRepo;
 import com.bigsquare.ShadiPortal.repositories.ExpenseRepo;
 import com.bigsquare.ShadiPortal.repositories.UserRepo;
 import com.bigsquare.ShadiPortal.security.CurrentUserService;
+import java.time.LocalDate;
 import com.bigsquare.ShadiPortal.services.ExpenseService;
 import jakarta.persistence.EntityNotFoundException;
 import org.apache.poi.ss.usermodel.Row;
@@ -38,6 +40,9 @@ import com.bigsquare.ShadiPortal.services.CloudinaryService;
 
 @Service
 public class ExpenseServiceImpl implements ExpenseService {
+
+    @Autowired
+    private ExpenseBillRepo expenseBillRepo;
 
     @Autowired
     private ExpenseRepo expenseRepo;
@@ -374,7 +379,11 @@ public class ExpenseServiceImpl implements ExpenseService {
             int page,
             int size,
             String search,
-            String category
+            String category,
+            String paymentStatus,
+            String paidBy,
+            LocalDate fromDate,
+            LocalDate toDate
     ) {
 
         Integer userId =
@@ -398,14 +407,38 @@ public class ExpenseServiceImpl implements ExpenseService {
                         ? ""
                         : category.trim();
 
-        return expenseRepo.findBySearchAndCategory(
+        String paymentStatusValue =
+                paymentStatus == null
+                        ? ""
+                        : paymentStatus
+                        .trim()
+                        .toUpperCase();
+
+        String paidByValue =
+                paidBy == null
+                        ? ""
+                        : paidBy.trim();
+
+        validateDateRange(
+                fromDate,
+                toDate
+        );
+
+        validatePaymentStatus(
+                paymentStatusValue
+        );
+
+        return expenseRepo.findByFilters(
                 userId,
                 searchValue,
                 categoryValue,
+                paymentStatusValue,
+                paidByValue,
+                fromDate,
+                toDate,
                 pageable
         );
     }
-
     @Override
     public void deleteExpense(
             Integer id
@@ -909,6 +942,85 @@ public class ExpenseServiceImpl implements ExpenseService {
                         ? String.valueOf(resourceType)
                         : "image"
         );
+    }
+
+    @Override
+    public void deleteExpenseBill(
+            Integer expenseId,
+            Integer billId
+    ) {
+
+        Expense expense =
+                getOwnedExpense(
+                        expenseId
+                );
+
+        ExpenseBill bill =
+                expenseBillRepo
+                        .findByIdAndExpenseId(
+                                billId,
+                                expenseId
+                        )
+                        .orElseThrow(() ->
+                                new EntityNotFoundException(
+                                        "Bill not found"
+                                )
+                        );
+
+        cloudinaryService.deleteFile(
+                bill.getBillPublicId(),
+                bill.getBillResourceType()
+        );
+
+        expense.getBills()
+                .remove(
+                        bill
+                );
+
+        expenseRepo.save(
+                expense
+        );
+
+    }
+
+    private void validateDateRange(
+            LocalDate fromDate,
+            LocalDate toDate
+    ) {
+
+        if (
+                fromDate != null
+                        && toDate != null
+                        && fromDate.isAfter(toDate)
+        ) {
+
+            throw new IllegalArgumentException(
+                    "From date cannot be after To date"
+            );
+        }
+    }
+
+    private void validatePaymentStatus(
+            String paymentStatus
+    ) {
+
+        if (
+                paymentStatus == null
+                        || paymentStatus.isBlank()
+        ) {
+            return;
+        }
+
+        if (
+                !paymentStatus.equals("PAID")
+                        && !paymentStatus.equals("PARTIAL")
+                        && !paymentStatus.equals("PENDING")
+        ) {
+
+            throw new IllegalArgumentException(
+                    "Invalid payment status"
+            );
+        }
     }
 
 }
