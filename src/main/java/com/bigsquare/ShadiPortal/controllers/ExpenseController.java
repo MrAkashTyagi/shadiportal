@@ -20,10 +20,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.URI;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
+
+import org.springframework.format.annotation.DateTimeFormat;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/expenses")
@@ -166,25 +166,96 @@ public class ExpenseController {
     @GetMapping
     public Page<Expense> getPaginatedExpenses(
 
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false, defaultValue = "") String search,
-            @RequestParam(required = false, defaultValue = "") String category
+            @RequestParam(
+                    defaultValue = "0"
+            )
+            int page,
+
+            @RequestParam(
+                    defaultValue = "10"
+            )
+            int size,
+
+            @RequestParam(
+                    required = false,
+                    defaultValue = ""
+            )
+            String search,
+
+            @RequestParam(
+                    required = false,
+                    defaultValue = ""
+            )
+            String category,
+
+            @RequestParam(
+                    required = false,
+                    defaultValue = ""
+            )
+            String paymentStatus,
+
+            @RequestParam(
+                    required = false,
+                    defaultValue = ""
+            )
+            String paidBy,
+
+            @RequestParam(
+                    required = false
+            )
+            @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE
+            )
+            LocalDate fromDate,
+
+            @RequestParam(
+                    required = false
+            )
+            @DateTimeFormat(
+                    iso = DateTimeFormat.ISO.DATE
+            )
+            LocalDate toDate
     ) {
 
-        return expenseService.getPaginatedExpenses(
-
-                page,
-                size,
-                search,
-                category
-        );
+        return expenseService
+                .getPaginatedExpenses(
+                        page,
+                        size,
+                        search,
+                        category,
+                        paymentStatus,
+                        paidBy,
+                        fromDate,
+                        toDate
+                );
     }
+
 
     // Delete Expense
     @DeleteMapping("/{id}")
     public void deleteExpense(@PathVariable Integer id) {
         expenseService.deleteExpense(id);
+    }
+
+//    delete bills
+
+    @DeleteMapping(
+            "/{expenseId}/bills/{billId}"
+    )
+    public ResponseEntity<Void>
+    deleteExpenseBill(
+            @PathVariable Integer expenseId,
+            @PathVariable Integer billId
+    ) {
+
+        expenseService.deleteExpenseBill(
+                expenseId,
+                billId
+        );
+
+        return ResponseEntity
+                .noContent()
+                .build();
     }
 
     @GetMapping("/export")
