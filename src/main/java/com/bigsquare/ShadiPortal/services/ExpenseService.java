@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+import java.time.LocalDate;
 public interface ExpenseService {
 
     // Create
@@ -30,15 +31,23 @@ public interface ExpenseService {
 
     // Paginated + Search + Category Filter
     Page<Expense> getPaginatedExpenses(
-
             int page,
             int size,
             String search,
-            String category
+            String category,
+            String paymentStatus,
+            String paidBy,
+            LocalDate fromDate,
+            LocalDate toDate
     );
 
     // Delete
     void deleteExpense(Integer id);
+
+    void deleteExpenseBill(
+            Integer expenseId,
+            Integer billId
+    );
 
     // Export
     byte[] exportExpenses(
