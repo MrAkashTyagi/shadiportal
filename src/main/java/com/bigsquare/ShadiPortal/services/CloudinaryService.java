@@ -24,22 +24,38 @@ public class CloudinaryService {
             String contentType =
                     file.getContentType();
 
+            if (contentType == null) {
+
+                throw new IllegalArgumentException(
+                        "Unsupported file type."
+                );
+
+            }
+
+            String resourceType;
+
             if (
-                    contentType == null
-                            || (
-                            !contentType.equalsIgnoreCase(
-                                    "image/jpeg"
-                            )
-                                    &&
-                                    !contentType.equalsIgnoreCase(
-                                            "image/png"
-                                    )
+                    contentType.startsWith(
+                            "image/"
                     )
             ) {
 
+                resourceType = "image";
+
+            } else if (
+                    contentType.startsWith(
+                            "video/"
+                    )
+            ) {
+
+                resourceType = "video";
+
+            } else {
+
                 throw new IllegalArgumentException(
-                        "Only JPG, JPEG and PNG files are allowed."
+                        "Only image and video files are allowed."
                 );
+
             }
 
             return cloudinary
@@ -48,7 +64,7 @@ public class CloudinaryService {
                             file.getBytes(),
                             ObjectUtils.asMap(
                                     "resource_type",
-                                    "image",
+                                    resourceType,
                                     "folder",
                                     folder
                             )
@@ -60,6 +76,7 @@ public class CloudinaryService {
                     "Cloudinary upload failed",
                     exception
             );
+
         }
     }
 
