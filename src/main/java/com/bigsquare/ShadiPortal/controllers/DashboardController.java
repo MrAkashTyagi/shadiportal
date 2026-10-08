@@ -26,12 +26,7 @@ public class DashboardController {
     }
 
     @GetMapping("/summary")
-    public ResponseEntity<DashboardSummaryDto>
-    getDashboardSummary() {
-
-        System.out.println(
-                "SUMMARY API HIT"
-        );
+    public ResponseEntity<DashboardSummaryDto> getDashboardSummary() {
 
         return ResponseEntity.ok(
                 dashboardService
@@ -40,12 +35,7 @@ public class DashboardController {
     }
 
     @GetMapping("/recent-guests")
-    public ResponseEntity<List<Guest>>
-    getRecentGuests() {
-
-        System.out.println(
-                "RECENT GUESTS API HIT"
-        );
+    public ResponseEntity<List<Guest>> getRecentGuests() {
 
         return ResponseEntity.ok(
                 dashboardService
@@ -55,8 +45,7 @@ public class DashboardController {
 
 
     @GetMapping("/recent-expenses")
-    public ResponseEntity<List<Expense>>
-    getRecentExpenses() {
+    public ResponseEntity<List<Expense>> getRecentExpenses() {
 
         return ResponseEntity.ok(
                 dashboardService
