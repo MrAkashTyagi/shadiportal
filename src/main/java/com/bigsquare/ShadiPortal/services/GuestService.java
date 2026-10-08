@@ -36,10 +36,10 @@ public interface GuestService {
             String search,
             String gender,
             String adultOrchild,
-            String cash,
             String gift,
+            String cash,
+            String guestCategory,
             String stay,
-            String category,
             Boolean invitationSent
     );
     ByteArrayInputStream getFilteredActualData(
@@ -58,4 +58,9 @@ public interface GuestService {
     List<GuestCategorySummaryDto> getGuestCategorySummary();
 
     List<GiftSummaryDto> getGiftSummary();
+
+    List<Guest> getGuestsByUserId(
+            Integer userId
+    );
+
 }
