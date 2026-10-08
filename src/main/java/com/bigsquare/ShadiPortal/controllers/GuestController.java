@@ -4,17 +4,14 @@ import com.bigsquare.ShadiPortal.dto.GiftSummaryDto;
 import com.bigsquare.ShadiPortal.dto.GuestCategorySummaryDto;
 import com.bigsquare.ShadiPortal.dto.GuestSummaryDto;
 import com.bigsquare.ShadiPortal.entities.Guest;
-import com.bigsquare.ShadiPortal.serviceImpl.GuestServiceImpl;
 
+import com.bigsquare.ShadiPortal.services.GuestService;
 import org.springframework.core.io.Resource;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.ByteArrayInputStream;
@@ -22,13 +19,17 @@ import java.io.IOException;
 import java.util.List;
 
 @RestController
-@Controller
 @RequestMapping("/guests")
 @CrossOrigin(origins = "http://localhost:4200")
 public class GuestController {
 
-    @Autowired
-    private GuestServiceImpl guestService;
+    private final GuestService guestService;
+
+    public GuestController(
+            GuestService guestService
+    ) {
+        this.guestService = guestService;
+    }
 
     // get guests as per pagination
     @GetMapping("/guest")
@@ -57,7 +58,6 @@ public class GuestController {
     ) {
 
         return this.guestService.getGuestWithPagination(
-
                 page,
                 size,
                 search,
@@ -70,7 +70,7 @@ public class GuestController {
                 invitationSent
         );
     }
-    @RequestMapping(value = "/getAllGuests", method = RequestMethod.GET)
+    @GetMapping("/getAllGuests")
     public List<Guest> getAllGuests() {
         return this.guestService.getAllGuests();
     }
@@ -81,10 +81,7 @@ public class GuestController {
     public Guest createGuest(
             @RequestBody Guest guest
     ) {
-
-        return guestService.createGuest(
-                guest
-        );
+        return guestService.createGuest(guest);
     }
 //    get guest by id
 
@@ -107,24 +104,6 @@ public class GuestController {
         this.guestService.delete(id);
     }
 
-    @RequestMapping(value = "/guestList", method = RequestMethod.GET)
-    public String guestController() {
-        return "guest";
-    }
-
-//    getting guests
-
-    @RequestMapping(value = "/getGuests", method = RequestMethod.GET)
-    public String guest(Model model) {
-        List<Guest> allGuests = guestService.getAllGuests();
-        System.out.println(allGuests);
-        model.addAttribute("guests", allGuests);
-
-        List<String> names = List.of("akash", "anuj", "arjun");
-        model.addAttribute("names", names);
-        return "guest";
-
-    }
 
 //    @RequestMapping("/download")
 //    public ResponseEntity<Resource> downloadExcel() throws IOException {
