@@ -13,395 +13,141 @@ import com.bigsquare.ShadiPortal.repositories.UserRepo;
 import com.bigsquare.ShadiPortal.security.CurrentUserService;
 import com.bigsquare.ShadiPortal.services.GuestService;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.TreeMap;
 
 @Service
 public class GuestServiceImpl implements GuestService {
 
-    @Autowired
-    private FamilyRepo familyRepo;
+    private final FamilyRepo familyRepo;
+    private final UserRepo userRepo;
+    private final GuestRepo guestRepo;
+    private final CurrentUserService currentUserService;
 
-    @Autowired
-    private UserRepo userRepo;
-
-    @Autowired
-    GuestRepo guestRepo;
-
-    @Autowired
-    private CurrentUserService currentUserService;
+    public GuestServiceImpl(
+            FamilyRepo familyRepo,
+            UserRepo userRepo,
+            GuestRepo guestRepo,
+            CurrentUserService currentUserService
+    ) {
+        this.familyRepo = familyRepo;
+        this.userRepo = userRepo;
+        this.guestRepo = guestRepo;
+        this.currentUserService = currentUserService;
+    }
 
     @Override
-    public Guest createGuest(
-            Guest guest
-    ) {
-
-        Integer userId =
-                currentUserService
-                        .getCurrentUserId();
-
-        if (userId == null) {
-            throw new IllegalArgumentException(
-                    "User id is required"
-            );
-        }
-
-        User user = userRepo
-                .findById(userId)
-                .orElseThrow(() ->
-                        new EntityNotFoundException(
-                                "User not found with id: " + userId
-                        )
-                );
+    @Transactional
+    public Guest createGuest(Guest guest) {
+        Integer userId = getCurrentUserId();
+        User user = getUserById(userId);
 
         guest.setUser(user);
-
-        if (
-                guest.getFamily() != null &&
-                        guest.getFamily().getFamilyName() != null &&
-                        !guest.getFamily().getFamilyName().isBlank()
-        ) {
-
-            String inputFamilyName =
-                    guest.getFamily()
-                            .getFamilyName()
-                            .trim();
-
-            Optional<Family> existingFamily =
-                    familyRepo
-                            .findByFamilyNameIgnoreCaseAndUserId(
-                                    inputFamilyName,
-                                    userId
-                            );
-
-            if (existingFamily.isPresent()) {
-
-                guest.setFamily(
-                        existingFamily.get()
-                );
-
-            } else {
-
-                Family newFamily = new Family();
-
-                newFamily.setFamilyName(
-                        inputFamilyName
-                );
-
-                newFamily.setUser(user);
-
-                Family savedFamily =
-                        familyRepo.save(newFamily);
-
-                guest.setFamily(savedFamily);
-            }
-
-        } else {
-
-            guest.setFamily(null);
-        }
+        guest.setFamily(resolveFamily(guest.getFamily(), user));
 
         return guestRepo.save(guest);
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public List<Guest> getAllGuests() {
+        Integer userId = getCurrentUserId();
 
-        Integer userId =
-                currentUserService
-                        .getCurrentUserId();
-
-        return guestRepo.findAllByUserId(
-                userId
-        );
+        return guestRepo.findAllByUserId(userId);
     }
 
     @Override
-    public Guest getById(
-            Integer id
-    ) {
+    @Transactional(readOnly = true)
+    public Guest getById(Integer id) {
+        Integer userId = getCurrentUserId();
 
-        Integer userId =
-                currentUserService
-                        .getCurrentUserId();
-
-        return guestRepo
-                .findByIdAndUserId(
-                        id,
-                        userId
-                )
-                .orElseThrow(() ->
-                        new EntityNotFoundException(
-                                "Guest not found"
-                        )
-                );
+        return getGuestByIdAndUserId(id, userId);
     }
 
     @Override
-    public void delete(
-            Integer id
-    ) {
+    @Transactional
+    public void delete(Integer id) {
+        Integer userId = getCurrentUserId();
+        Guest guest = getGuestByIdAndUserId(id, userId);
 
-        Integer userId =
-                currentUserService
-                        .getCurrentUserId();
-
-        Guest guest =
-                guestRepo
-                        .findByIdAndUserId(
-                                id,
-                                userId
-                        )
-                        .orElseThrow(() ->
-                                new EntityNotFoundException(
-                                        "Guest not found"
-                                )
-                        );
-
-        guestRepo.delete(
-                guest
-        );
+        guestRepo.delete(guest);
     }
 
     @Override
-    public Guest updateGuest(
-            Integer id,
-            Guest guest
-    ) {
+    @Transactional
+    public Guest updateGuest(Integer id, Guest guest) {
+        Integer userId = getCurrentUserId();
+        Guest existingGuest = getGuestByIdAndUserId(id, userId);
 
-        Integer userId =
-                currentUserService
-                        .getCurrentUserId();
+        updateGuestFields(existingGuest, guest);
 
-        Guest existingGuest =
-                guestRepo
-                        .findByIdAndUserId(
-                                id,
-                                userId
-                        )
-                        .orElseThrow(() ->
-                                new EntityNotFoundException(
-                                        "Guest not found"
-                                )
-                        );
-
-        existingGuest.setName(
-                guest.getName()
+        Family resolvedFamily = resolveFamily(
+                guest.getFamily(),
+                existingGuest.getUser()
         );
 
-        existingGuest.setEmail(
-                guest.getEmail()
-        );
+        existingGuest.setFamily(resolvedFamily);
 
-        existingGuest.setGuestCategory(
-                guest.getGuestCategory()
-        );
-
-        existingGuest.setWhatsapp_Number(
-                guest.getWhatsapp_Number()
-        );
-
-        existingGuest.setGender(
-                guest.getGender()
-        );
-
-        existingGuest.setPhoneNumber(
-                guest.getPhoneNumber()
-        );
-
-        existingGuest.setAdultOrchild(
-                guest.getAdultOrchild()
-        );
-
-        existingGuest.setGift(
-                guest.getGift()
-        );
-
-        existingGuest.setStay(
-                guest.getStay()
-        );
-
-        existingGuest.setCash(
-                guest.getCash()
-        );
-
-        existingGuest.setInvitationSent(
-                guest.getInvitationSent()
-        );
-
-        if (guest.getFamily() == null) {
-
-            existingGuest.setFamily(null);
-
-        } else if (
-                guest.getFamily().getId() != null
-        ) {
-
-            Family existingFamily =
-                    familyRepo
-                            .findByIdAndUserId(
-                                    guest.getFamily().getId(),
-                                    userId
-                            )
-                            .orElseThrow(() ->
-                                    new EntityNotFoundException(
-                                            "Family not found"
-                                    )
-                            );
-
-            existingGuest.setFamily(
-                    existingFamily
-            );
-
-        } else if (
-                guest.getFamily()
-                        .getFamilyName() != null &&
-                        !guest.getFamily()
-                                .getFamilyName()
-                                .isBlank()
-        ) {
-
-            String familyName =
-                    guest.getFamily()
-                            .getFamilyName()
-                            .trim();
-
-            Family resolvedFamily =
-                    familyRepo
-                            .findByFamilyNameIgnoreCaseAndUserId(
-                                    familyName,
-                                    userId
-                            )
-                            .orElseGet(() -> {
-
-                                Family newFamily =
-                                        new Family();
-
-                                newFamily.setFamilyName(
-                                        familyName
-                                );
-
-                                newFamily.setUser(
-                                        existingGuest.getUser()
-                                );
-
-                                return familyRepo.save(
-                                        newFamily
-                                );
-                            });
-
-            existingGuest.setFamily(
-                    resolvedFamily
-            );
-
-        } else {
-
-            existingGuest.setFamily(null);
-        }
-
-        return guestRepo.save(
-                existingGuest
-        );
+        return guestRepo.save(existingGuest);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<Guest> getGuestWithPagination(
-
             int page,
-
             int size,
-
             String search,
-
             String gender,
-
             String adultOrchild,
-
             String gift,
-
             String cash,
-
             String guestCategory,
-
             String stay,
-
             Boolean invitationSent
     ) {
+        Integer userId = getCurrentUserId();
 
-        Integer userId =
-                currentUserService
-                        .getCurrentUserId();
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by("id").ascending()
+        );
 
-        Pageable pageable =
-                PageRequest.of(
-                        page,
-                        size,
-                        Sort.by("id")
-                                .ascending()
-                );
-
-        String searchValue = search == null ? "" : search.trim();
-
-        String genderValue = gender == null ? "" : gender.trim();
-
-        String typeValue = adultOrchild == null ? "" : adultOrchild.trim();
-
-        String typegift = gift == null ? "" : gift.trim();
-
-        String typestay = stay == null ? "" : stay.trim();
-
-        String typecash = cash == null ? "" : cash.trim();
-
-        String typeCategory = guestCategory == null ? "" : guestCategory.trim();
-
-        // Agar search string null ya empty hai, toh normal sara data paged return karein
-//        if (search == null || search.trim().isEmpty()) {
-//            return this.guestRepo.findAll(pageable);
-//        }
-
-        // Agar search me kuch value hai, toh custom query chalayein
-//        return this.guestRepo.findBySearchQuery(search.trim(), pageable);
-
-        return this.guestRepo.findGuestsWithFilters(
+        return guestRepo.findGuestsWithFilters(
                 userId,
-                searchValue,
-                genderValue,
-                typeValue,
-                typeCategory,
-                typegift,
-                typestay,
-                typecash,
+                normalize(search),
+                normalize(gender),
+                normalize(adultOrchild),
+                normalize(guestCategory),
+                normalize(gift),
+                normalize(stay),
+                normalize(cash),
                 invitationSent,
                 pageable
         );
     }
 
-    public ByteArrayInputStream getActualData(
-            Integer userId
-    ) throws IOException {
+    @Transactional(readOnly = true)
+    public ByteArrayInputStream getActualData(Integer userId)
+            throws IOException {
 
-        List<Guest> guestList =
-                guestRepo.findAllByUserId(
-                        userId
-                );
+        List<Guest> guestList = guestRepo.findAllByUserId(userId);
 
-        return GuestHelper.dataToExcel(
-                guestList
-        );
+        return GuestHelper.dataToExcel(guestList);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ByteArrayInputStream getFilteredActualData(
             String search,
             String gender,
@@ -411,167 +157,73 @@ public class GuestServiceImpl implements GuestService {
             String guestCategory,
             String stay,
             Boolean invitationSent
-    )
-            throws IOException {
+    ) throws IOException {
 
-        Integer userId =
-                currentUserService
-                        .getCurrentUserId();
+        Integer userId = getCurrentUserId();
 
-        if (userId == null) {
-
-            throw new IllegalArgumentException(
-                    "User id is required"
-            );
-        }
-
-        String searchValue =
-                search == null
-                        ? ""
-                        : search.trim();
-
-        String genderValue =
-                gender == null
-                        ? ""
-                        : gender.trim();
-
-        String typeValue =
-                adultOrchild == null
-                        ? ""
-                        : adultOrchild.trim();
-
-        String giftValue =
-                gift == null
-                        ? ""
-                        : gift.trim();
-
-        String cashValue =
-                cash == null
-                        ? ""
-                        : cash.trim();
-
-        String categoryValue =
-                guestCategory == null
-                        ? ""
-                        : guestCategory.trim();
-
-        String stayValue =
-                stay == null
-                        ? ""
-                        : stay.trim();
-
-        List<Guest> guestList =
-                guestRepo.findAllGuestsWithFilters(
-                        userId,
-                        searchValue,
-                        genderValue,
-                        typeValue,
-                        categoryValue,
-                        giftValue,
-                        stayValue,
-                        cashValue,
-                        invitationSent
-                );
-
-        return GuestHelper.dataToExcel(
-                guestList
+        List<Guest> guestList = guestRepo.findAllGuestsWithFilters(
+                userId,
+                normalize(search),
+                normalize(gender),
+                normalize(adultOrchild),
+                normalize(guestCategory),
+                normalize(gift),
+                normalize(stay),
+                normalize(cash),
+                invitationSent
         );
+
+        return GuestHelper.dataToExcel(guestList);
     }
 
     @Override
-    public GuestSummaryDto getGuestSummary(
-
-    ) {
-
-        Integer userId =
-                currentUserService
-                        .getCurrentUserId();
+    @Transactional(readOnly = true)
+    public GuestSummaryDto getGuestSummary() {
+        Integer userId = getCurrentUserId();
 
         return new GuestSummaryDto(
-
-                guestRepo.countByUserId(
-                        userId
-                ),
-
-                guestRepo.countByUserIdAndInvitationSentTrue(
-                        userId
-                ),
-
-                guestRepo.countPendingInvitationsByUserId(
-                        userId
-                ),
-
-                guestRepo.countByUserIdAndStay(
-                        userId,
-                        "Yes"
-                )
-
+                guestRepo.countByUserId(userId),
+                guestRepo.countByUserIdAndInvitationSentTrue(userId),
+                guestRepo.countPendingInvitationsByUserId(userId),
+                guestRepo.countByUserIdAndStay(userId, "Yes")
         );
     }
 
     @Override
-    public List<GuestCategorySummaryDto>
-    getGuestCategorySummary() {
+    @Transactional(readOnly = true)
+    public List<GuestCategorySummaryDto> getGuestCategorySummary() {
+        Integer userId = getCurrentUserId();
 
-        Integer userId =
-                currentUserService
-                        .getCurrentUserId();
-
-        return guestRepo
-                .getGuestCategorySummary(
-                        userId
-                );
-    }
-
-
-    public List<Guest> getGuestsByUserId(
-            Integer userId
-    ) {
-
-        return guestRepo.findByUserId(
-                userId
-        );
-
+        return guestRepo.getGuestCategorySummary(userId);
     }
 
     @Override
-    public List<GiftSummaryDto> getGiftSummary(
+    @Transactional(readOnly = true)
+    public List<Guest> getGuestsByUserId(Integer userId) {
+        return guestRepo.findByUserId(userId);
+    }
 
-    ) {
+    @Override
+    @Transactional(readOnly = true)
+    public List<GiftSummaryDto> getGiftSummary() {
+        Integer userId = getCurrentUserId();
+        List<Guest> guests = guestRepo.findAllByUserId(userId);
 
-        Integer userId =
-                currentUserService
-                        .getCurrentUserId();
-
-        List<Guest> guests =
-                guestRepo.findAllByUserId(
-                        userId
-                );
-
-        Map<String, Long> giftCounts =
-                new TreeMap<>(
-                        String.CASE_INSENSITIVE_ORDER
-                );
+        Map<String, Long> giftCounts = new TreeMap<>(
+                String.CASE_INSENSITIVE_ORDER
+        );
 
         for (Guest guest : guests) {
+            String giftValue = guest.getGift();
 
-            String giftValue =
-                    guest.getGift();
-
-            if (
-                    giftValue == null ||
-                            giftValue.isBlank()
-            ) {
+            if (giftValue == null || giftValue.isBlank()) {
                 continue;
             }
 
-            String[] gifts =
-                    giftValue.split(",");
+            String[] gifts = giftValue.split(",");
 
             for (String gift : gifts) {
-
-                String normalizedGift =
-                        gift.trim();
+                String normalizedGift = gift.trim();
 
                 if (normalizedGift.isBlank()) {
                     continue;
@@ -585,16 +237,137 @@ public class GuestServiceImpl implements GuestService {
             }
         }
 
-        return giftCounts
-                .entrySet()
+        return giftCounts.entrySet()
                 .stream()
-                .map(entry ->
-                        new GiftSummaryDto(
-                                entry.getKey(),
-                                entry.getValue()
-                        )
-                )
+                .map(entry -> new GiftSummaryDto(
+                        entry.getKey(),
+                        entry.getValue()
+                ))
                 .toList();
     }
 
+    private Integer getCurrentUserId() {
+        Integer userId = currentUserService.getCurrentUserId();
+
+        if (userId == null) {
+            throw new IllegalArgumentException(
+                    "User id is required"
+            );
+        }
+
+        return userId;
+    }
+
+    private User getUserById(Integer userId) {
+        return userRepo.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "User not found with id: " + userId
+                ));
+    }
+
+    private Guest getGuestByIdAndUserId(
+            Integer guestId,
+            Integer userId
+    ) {
+        return guestRepo.findByIdAndUserId(guestId, userId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Guest not found with id: " + guestId
+                ));
+    }
+
+    private Family resolveFamily(
+            Family requestedFamily,
+            User user
+    ) {
+        if (requestedFamily == null) {
+            return null;
+        }
+
+        Integer userId = user.getId();
+
+        if (requestedFamily.getId() != null) {
+            return familyRepo.findByIdAndUserId(
+                            requestedFamily.getId(),
+                            userId
+                    )
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "Family not found with id: "
+                                    + requestedFamily.getId()
+                    ));
+        }
+
+        String familyName = normalize(
+                requestedFamily.getFamilyName()
+        );
+
+        if (familyName.isEmpty()) {
+            return null;
+        }
+
+        return familyRepo
+                .findByFamilyNameIgnoreCaseAndUserId(
+                        familyName,
+                        userId
+                )
+                .orElseGet(() -> {
+                    Family newFamily = new Family();
+                    newFamily.setFamilyName(familyName);
+                    newFamily.setUser(user);
+
+                    return familyRepo.save(newFamily);
+                });
+    }
+
+    private void updateGuestFields(
+            Guest existingGuest,
+            Guest requestedGuest
+    ) {
+        existingGuest.setName(
+                requestedGuest.getName()
+        );
+
+        existingGuest.setEmail(
+                requestedGuest.getEmail()
+        );
+
+        existingGuest.setGuestCategory(
+                requestedGuest.getGuestCategory()
+        );
+
+        existingGuest.setWhatsapp_Number(
+                requestedGuest.getWhatsapp_Number()
+        );
+
+        existingGuest.setGender(
+                requestedGuest.getGender()
+        );
+
+        existingGuest.setPhoneNumber(
+                requestedGuest.getPhoneNumber()
+        );
+
+        existingGuest.setAdultOrchild(
+                requestedGuest.getAdultOrchild()
+        );
+
+        existingGuest.setGift(
+                requestedGuest.getGift()
+        );
+
+        existingGuest.setStay(
+                requestedGuest.getStay()
+        );
+
+        existingGuest.setCash(
+                requestedGuest.getCash()
+        );
+
+        existingGuest.setInvitationSent(
+                requestedGuest.getInvitationSent()
+        );
+    }
+
+    private String normalize(String value) {
+        return value == null ? "" : value.trim();
+    }
 }
