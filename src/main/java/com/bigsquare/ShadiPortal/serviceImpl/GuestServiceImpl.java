@@ -1,8 +1,6 @@
 package com.bigsquare.ShadiPortal.serviceImpl;
 
-import com.bigsquare.ShadiPortal.dto.GiftSummaryDto;
-import com.bigsquare.ShadiPortal.dto.GuestCategorySummaryDto;
-import com.bigsquare.ShadiPortal.dto.GuestSummaryDto;
+import com.bigsquare.ShadiPortal.dto.*;
 import com.bigsquare.ShadiPortal.entities.Family;
 import com.bigsquare.ShadiPortal.entities.Guest;
 import com.bigsquare.ShadiPortal.entities.User;
@@ -24,7 +22,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class GuestServiceImpl implements GuestService {
@@ -369,5 +370,116 @@ public class GuestServiceImpl implements GuestService {
 
     private String normalize(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CashEnvelopeSummaryResponse getCashEnvelopeSummary() {
+
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
+
+        List<Guest> guests =
+                guestRepo
+                        .findAllByUserId(
+                                userId
+                        );
+
+        Map<Integer, Long> denominationCounts =
+                guests.stream()
+                        .map(Guest::getCash)
+                        .map(this::parseCashAmount)
+                        .filter(Objects::nonNull)
+                        .filter(amount -> amount > 0)
+                        .collect(
+                                Collectors.groupingBy(
+                                        Function.identity(),
+                                        TreeMap::new,
+                                        Collectors.counting()
+                                )
+                        );
+
+        List<CashEnvelopeSummaryItem> items =
+                denominationCounts
+                        .entrySet()
+                        .stream()
+                        .map(entry -> {
+
+                            Integer denomination =
+                                    entry.getKey();
+
+                            Long count =
+                                    entry.getValue();
+
+                            Long amount =
+                                    denomination.longValue()
+                                            * count;
+
+                            return new CashEnvelopeSummaryItem(
+                                    denomination,
+                                    count,
+                                    amount
+                            );
+                        })
+                        .toList();
+
+        Long totalEnvelopes =
+                items.stream()
+                        .mapToLong(
+                                CashEnvelopeSummaryItem::getCount
+                        )
+                        .sum();
+
+        Long grandTotal =
+                items.stream()
+                        .mapToLong(
+                                CashEnvelopeSummaryItem::getAmount
+                        )
+                        .sum();
+
+        return new CashEnvelopeSummaryResponse(
+                items,
+                totalEnvelopes,
+                grandTotal
+        );
+    }
+
+    private Integer parseCashAmount(
+            String cash
+    ) {
+
+        if (
+                cash == null
+                        || cash.isBlank()
+        ) {
+            return null;
+        }
+
+        String normalizedCash =
+                cash.trim()
+                        .replace("₹", "")
+                        .replace(",", "")
+                        .replaceAll(
+                                "[^0-9]",
+                                ""
+                        );
+
+        if (normalizedCash.isBlank()) {
+            return null;
+        }
+
+        try {
+
+            return Integer.valueOf(
+                    normalizedCash
+            );
+
+        } catch (
+                NumberFormatException exception
+        ) {
+
+            return null;
+        }
     }
 }
