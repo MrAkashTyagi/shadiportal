@@ -482,4 +482,19 @@ public class GuestServiceImpl implements GuestService {
             return null;
         }
     }
+
+    @Override
+    public List<Guest> getStayGuests() {
+
+        Integer userId =
+                currentUserService
+                        .getCurrentUserId();
+
+        return guestRepo
+                .findByStayIgnoreCaseAndUserId(
+                        "Yes",
+                        userId
+                );
+    }
+
 }
