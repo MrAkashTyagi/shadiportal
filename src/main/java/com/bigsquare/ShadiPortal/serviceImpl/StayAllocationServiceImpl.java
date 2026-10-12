@@ -25,7 +25,10 @@ import java.time.LocalDate;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import com.bigsquare.ShadiPortal.helper.StayAllocationExcelHelper;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 @Service
 public class StayAllocationServiceImpl
         implements StayAllocationService {
@@ -932,5 +935,30 @@ public class StayAllocationServiceImpl
                 allocation.getCreatedAt(),
                 allocation.getUpdatedAt()
         );
+    }
+
+    @Override
+    public ByteArrayInputStream exportStayAllocations()
+            throws IOException {
+
+        Integer userId = getCurrentUserId();
+
+        List<StayAllocation> allocations =
+                stayAllocationRepo
+                        .findAllByUserIdOrderByIdDesc(
+                                userId
+                        );
+
+        List<StayRoom> rooms =
+                stayRoomRepo
+                        .findAllByLocationUserIdOrderByLocationNameAscNameAsc(
+                                userId
+                        );
+
+        return StayAllocationExcelHelper
+                .exportStayData(
+                        allocations,
+                        rooms
+                );
     }
 }
