@@ -12,6 +12,14 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+
 @RestController
 @RequestMapping("/stay-allocations")
 @CrossOrigin(origins = "http://localhost:4200")
@@ -169,4 +177,32 @@ public class StayAllocationController {
                 .noContent()
                 .build();
     }
+
+    @GetMapping("/export")
+    public ResponseEntity<Resource>
+    exportStayAllocations()
+            throws IOException {
+
+        ByteArrayInputStream excelData =
+                stayAllocationService
+                        .exportStayAllocations();
+
+        InputStreamResource file =
+                new InputStreamResource(
+                        excelData
+                );
+
+        return ResponseEntity.ok()
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=stay-allocation-report.xlsx"
+                )
+                .contentType(
+                        MediaType.parseMediaType(
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        )
+                )
+                .body(file);
+    }
+
 }
