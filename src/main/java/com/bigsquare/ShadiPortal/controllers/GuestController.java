@@ -259,4 +259,12 @@ public class GuestController {
         );
     }
 
+    @GetMapping("/stay-guests")
+    public ResponseEntity<List<Guest>> getStayGuests() {
+
+        return ResponseEntity.ok(
+                guestService.getStayGuests()
+        );
+    }
+
 }
