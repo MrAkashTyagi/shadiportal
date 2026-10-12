@@ -291,4 +291,16 @@ public interface GuestRepo extends JpaRepository<Guest, Integer> {
             Integer userId
     );
 
+    @Query("""
+       select g
+       from Guest g
+       where lower(g.stay) = 'yes'
+       """)
+    List<Guest> getStayGuests();
+
+    List<Guest> findByStayIgnoreCaseAndUserId(
+            String stay,
+            Integer userId
+    );
+
 }
