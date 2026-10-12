@@ -6,6 +6,8 @@ import com.bigsquare.ShadiPortal.dto.StayAllocationResponse;
 import com.bigsquare.ShadiPortal.dto.StayRoomCapacityResponse;
 import com.bigsquare.ShadiPortal.enums.StayAllocationStatus;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.List;
 
 public interface StayAllocationService {
@@ -49,4 +51,7 @@ public interface StayAllocationService {
     StayRoomCapacityResponse getRoomCapacity(
             Integer roomId
     );
+
+    ByteArrayInputStream exportStayAllocations()
+            throws IOException;
 }
