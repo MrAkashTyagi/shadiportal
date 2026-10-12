@@ -66,4 +66,6 @@ public interface GuestService {
 
     CashEnvelopeSummaryResponse getCashEnvelopeSummary();
 
+    List<Guest> getStayGuests();
+
 }
