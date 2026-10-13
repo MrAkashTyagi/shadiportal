@@ -34,17 +34,28 @@ public class GuestServiceImpl implements GuestService {
     private final UserRepo userRepo;
     private final GuestRepo guestRepo;
     private final CurrentUserService currentUserService;
+    private final GuestEnvelopeExpenseSyncService
+            envelopeExpenseSyncService;
 
     public GuestServiceImpl(
             FamilyRepo familyRepo,
             UserRepo userRepo,
             GuestRepo guestRepo,
-            CurrentUserService currentUserService
+            CurrentUserService currentUserService,
+            GuestEnvelopeExpenseSyncService
+                    envelopeExpenseSyncService
     ) {
         this.familyRepo = familyRepo;
+
         this.userRepo = userRepo;
+
         this.guestRepo = guestRepo;
-        this.currentUserService = currentUserService;
+
+        this.currentUserService =
+                currentUserService;
+
+        this.envelopeExpenseSyncService =
+                envelopeExpenseSyncService;
     }
 
     @Override
@@ -56,7 +67,17 @@ public class GuestServiceImpl implements GuestService {
         guest.setUser(user);
         guest.setFamily(resolveFamily(guest.getFamily(), user));
 
-        return guestRepo.save(guest);
+        Guest savedGuest =
+                guestRepo.saveAndFlush(
+                        guest
+                );
+
+        envelopeExpenseSyncService
+                .syncEnvelopeExpense(
+                        userId
+                );
+
+        return savedGuest;
     }
 
     @Override
@@ -81,7 +102,16 @@ public class GuestServiceImpl implements GuestService {
         Integer userId = getCurrentUserId();
         Guest guest = getGuestByIdAndUserId(id, userId);
 
-        guestRepo.delete(guest);
+        guestRepo.delete(
+                guest
+        );
+
+        guestRepo.flush();
+
+        envelopeExpenseSyncService
+                .syncEnvelopeExpense(
+                        userId
+                );
     }
 
     @Override
@@ -99,7 +129,17 @@ public class GuestServiceImpl implements GuestService {
 
         existingGuest.setFamily(resolvedFamily);
 
-        return guestRepo.save(existingGuest);
+        Guest updatedGuest =
+                guestRepo.saveAndFlush(
+                        existingGuest
+                );
+
+        envelopeExpenseSyncService
+                .syncEnvelopeExpense(
+                        userId
+                );
+
+        return updatedGuest;
     }
 
     @Override
