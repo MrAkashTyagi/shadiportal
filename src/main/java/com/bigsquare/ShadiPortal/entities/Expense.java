@@ -11,12 +11,27 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-@Entity
+
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
+@Entity
+@Table(
+        name = "expense",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_expense_user_source",
+                        columnNames = {
+                                "user_id",
+                                "source_type"
+                        }
+                )
+        }
+)
+
 public class Expense {
 
 
@@ -34,6 +49,18 @@ public class Expense {
     private Double totalAmount;
 
     private Double paidAmount;
+
+    @Column(
+            name = "system_generated",
+            nullable = false
+    )
+    private Boolean systemGenerated = false;
+
+    @Column(
+            name = "source_type",
+            length = 50
+    )
+    private String sourceType;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -66,5 +93,12 @@ public class Expense {
     private List<ExpenseBill> bills =
             new ArrayList<>();
 
+    @PrePersist
+    public void applyDefaults() {
+
+        if (systemGenerated == null) {
+            systemGenerated = false;
+        }
+    }
 
 }
