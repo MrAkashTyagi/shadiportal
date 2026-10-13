@@ -31,3 +31,19 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Local Spring configuration
+src/main/resources/application-local.properties
+src/main/resources/application-dev.properties
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Build
+target/
