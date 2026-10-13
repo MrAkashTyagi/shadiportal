@@ -79,6 +79,22 @@ public class ExpenseServiceImpl implements ExpenseService {
 
         validateAmounts(expense);
 
+        validateAmounts(
+                expense
+        );
+
+        expense.setSystemGenerated(
+                false
+        );
+
+        expense.setSourceType(
+                null
+        );
+
+        expense.setUser(
+                user
+        );
+
         expense.setUser(user);
 
         List<Map> uploadedFiles =
@@ -151,6 +167,10 @@ public class ExpenseServiceImpl implements ExpenseService {
 
         Expense existingExpense =
                 getOwnedExpense(id);
+
+        validateManualExpense(
+                existingExpense
+        );
 
         existingExpense.setExpenseName(
                 expense.getExpenseName()
@@ -446,6 +466,10 @@ public class ExpenseServiceImpl implements ExpenseService {
 
         Expense expense =
                 getOwnedExpense(id);
+
+        validateManualExpense(
+                expense
+        );
 
         try {
 
@@ -955,6 +979,10 @@ public class ExpenseServiceImpl implements ExpenseService {
                         expenseId
                 );
 
+        validateManualExpense(
+                expense
+        );
+
         ExpenseBill bill =
                 expenseBillRepo
                         .findByIdAndExpenseId(
@@ -1019,6 +1047,20 @@ public class ExpenseServiceImpl implements ExpenseService {
 
             throw new IllegalArgumentException(
                     "Invalid payment status"
+            );
+        }
+    }
+
+    private void validateManualExpense(
+            Expense expense
+    ) {
+        if (
+                Boolean.TRUE.equals(
+                        expense.getSystemGenerated()
+                )
+        ) {
+            throw new IllegalStateException(
+                    "System generated expense cannot be modified manually."
             );
         }
     }
