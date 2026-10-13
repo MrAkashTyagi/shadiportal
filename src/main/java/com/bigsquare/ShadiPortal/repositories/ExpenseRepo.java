@@ -248,4 +248,9 @@ public interface ExpenseRepo extends JpaRepository<Expense, Integer> {
             Pageable pageable
     );
 
+    Optional<Expense> findByUserIdAndSourceType(
+            Integer userId,
+            String sourceType
+    );
+
 }
