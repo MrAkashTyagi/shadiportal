@@ -2,39 +2,32 @@ package com.bigsquare.ShadiPortal.controllers;
 
 import com.bigsquare.ShadiPortal.dto.WeddingContactRequest;
 import com.bigsquare.ShadiPortal.dto.WeddingContactResponse;
-
-
 import com.bigsquare.ShadiPortal.services.WeddingContactService;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/wedding-contacts")
 @RequiredArgsConstructor
 public class WeddingContactController {
 
-    private final WeddingContactService
-            service;
+    private final WeddingContactService service;
 
     @PostMapping
     public WeddingContactResponse create(
-            @RequestBody
-            WeddingContactRequest request) {
+            @RequestBody WeddingContactRequest request
+    ) {
 
-        return service.createContact(
-                request
-        );
+        return service.createContact(request);
     }
 
     @PutMapping("/{id}")
     public WeddingContactResponse update(
             @PathVariable Long id,
-            @RequestBody
-            WeddingContactRequest request) {
+            @RequestBody WeddingContactRequest request
+    ) {
 
         return service.updateContact(
                 id,
@@ -44,30 +37,26 @@ public class WeddingContactController {
 
     @GetMapping("/{id}")
     public WeddingContactResponse getById(
-            @PathVariable Long id) {
+            @PathVariable Long id
+    ) {
 
-        return service.getContactById(
-                id
-        );
+        return service.getContactById(id);
     }
 
-//    @GetMapping
-//    public List<WeddingContactResponse>
-//    getAll() {
-//
-//        return service.getAllContacts();
-//    }
-
     @DeleteMapping("/{id}")
-    public void delete(
-            @PathVariable Long id) {
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id
+    ) {
 
         service.deleteContact(id);
+
+        return ResponseEntity
+                .noContent()
+                .build();
     }
 
     @GetMapping
     public Page<WeddingContactResponse> getContacts(
-
             @RequestParam(
                     defaultValue = ""
             )
@@ -81,7 +70,8 @@ public class WeddingContactController {
             @RequestParam(
                     defaultValue = "10"
             )
-            int size) {
+            int size
+    ) {
 
         return service.getContacts(
                 search,
@@ -89,5 +79,4 @@ public class WeddingContactController {
                 size
         );
     }
-
 }
