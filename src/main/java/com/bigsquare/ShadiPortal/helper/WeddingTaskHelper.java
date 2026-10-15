@@ -432,11 +432,12 @@ public final class WeddingTaskHelper {
 
         try {
 
+            /*
+             * Actual Excel date cell
+             */
             if (
-                    cell.getCellType()
-                            == CellType.NUMERIC
-                            && DateUtil
-                            .isCellDateFormatted(cell)
+                    cell.getCellType() == CellType.NUMERIC
+                            && DateUtil.isCellDateFormatted(cell)
             ) {
 
                 return cell
@@ -453,17 +454,56 @@ public final class WeddingTaskHelper {
                 return null;
             }
 
-            return LocalDate.parse(
-                    value,
-                    DateTimeFormatter.ISO_LOCAL_DATE
+            List<DateTimeFormatter> supportedFormats =
+                    List.of(
+                            DateTimeFormatter.ISO_LOCAL_DATE,
+                            DateTimeFormatter.ofPattern("M/d/yy"),
+                            DateTimeFormatter.ofPattern("M/d/yyyy"),
+                            DateTimeFormatter.ofPattern("d/M/yy"),
+                            DateTimeFormatter.ofPattern("d/M/yyyy"),
+                            DateTimeFormatter.ofPattern("dd-MM-yyyy"),
+                            DateTimeFormatter.ofPattern("d-MM-yyyy")
+                    );
+
+            for (
+                    DateTimeFormatter dateFormatter
+                    : supportedFormats
+            ) {
+
+                try {
+
+                    return LocalDate.parse(
+                            value,
+                            dateFormatter
+                    );
+
+                } catch (
+                        java.time.format.DateTimeParseException ignored
+                ) {
+                    // Next supported format try hoga.
+                }
+            }
+
+            throw new IllegalArgumentException(
+                    "Invalid dueDate at Excel row "
+                            + (rowIndex + 1)
+                            + ". Actual value: "
+                            + value
             );
+
+        } catch (IllegalArgumentException exception) {
+
+            throw exception;
 
         } catch (Exception exception) {
 
             throw new IllegalArgumentException(
                     "Invalid dueDate at Excel row "
                             + (rowIndex + 1)
-                            + ". Expected format: yyyy-MM-dd"
+                            + ". Expected formats: "
+                            + "yyyy-MM-dd, dd-MM-yyyy, "
+                            + "dd/MM/yyyy or MM/dd/yyyy",
+                    exception
             );
         }
     }
