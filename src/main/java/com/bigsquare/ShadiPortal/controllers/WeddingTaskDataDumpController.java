@@ -8,11 +8,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
@@ -21,6 +17,12 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/wedding-tasks/dump")
+@CrossOrigin(
+        origins = {
+                "http://localhost:4200",
+                "http://shadiportal-frontend-2026.s3-website-ap-southeast-2.amazonaws.com"
+        }
+)
 @RequiredArgsConstructor
 public class WeddingTaskDataDumpController {
 
