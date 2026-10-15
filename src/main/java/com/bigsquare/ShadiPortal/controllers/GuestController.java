@@ -21,7 +21,9 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/guests")
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = {"http://localhost:4200",
+        "http://shadiportal-frontend-2026.s3-website-ap-southeast-2.amazonaws.com"
+})
 public class GuestController {
 
     private final GuestService guestService;
