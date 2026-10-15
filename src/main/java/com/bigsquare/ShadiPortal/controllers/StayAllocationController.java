@@ -22,7 +22,9 @@ import java.io.IOException;
 
 @RestController
 @RequestMapping("/stay-allocations")
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = {"http://localhost:4200",
+        "http://shadiportal-frontend-2026.s3-website-ap-southeast-2.amazonaws.com"
+})
 public class StayAllocationController {
 
     private final StayAllocationService stayAllocationService;
