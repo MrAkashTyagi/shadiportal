@@ -35,35 +35,30 @@ public class WeddingTaskDataDumpController {
             MultipartFile file
     ) {
 
-        if (
-                !WeddingTaskHelper
-                        .checkExcelFormat(file)
-        ) {
+        System.out.println("TASK IMPORT HIT");
+        System.out.println("FILE = " + file.getOriginalFilename());
 
-            return ResponseEntity
-                    .badRequest()
-                    .body(
-                            Map.of(
-                                    "message",
-                                    "Please upload a valid .xlsx Excel file"
-                            )
-                    );
+        try {
+
+            int importedCount =
+                    weddingTaskDataDumpService.save(file);
+
+            return ResponseEntity.ok(
+                    Map.of(
+                            "message",
+                            "Wedding tasks imported successfully",
+                            "importedCount",
+                            importedCount
+                    )
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            throw e;
         }
-
-        int importedCount =
-                weddingTaskDataDumpService
-                        .save(file);
-
-        return ResponseEntity.ok(
-                Map.of(
-                        "message",
-                        "Wedding tasks imported successfully",
-                        "importedCount",
-                        importedCount
-                )
-        );
     }
-
     @GetMapping("/download")
     public ResponseEntity<Resource> downloadExcel()
             throws IOException {
