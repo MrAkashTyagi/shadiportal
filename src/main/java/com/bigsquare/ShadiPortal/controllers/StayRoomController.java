@@ -12,7 +12,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/stay-rooms")
 @CrossOrigin(
-        origins = "http://localhost:4200"
+        origins = {"http://localhost:4200",
+                "http://shadiportal-frontend-2026.s3-website-ap-southeast-2.amazonaws.com"
+        }
 )
 public class StayRoomController {
 
