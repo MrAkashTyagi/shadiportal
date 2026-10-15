@@ -336,30 +336,54 @@ public final class WeddingTaskHelper {
             int rowIndex
     ) {
 
-        if (value == null) {
+        if (
+                value == null
+                        || value.isBlank()
+        ) {
             return TaskStatus.TODO;
         }
 
         String normalizedValue =
                 value.trim()
                         .toUpperCase()
+                        .replace("-", "_")
                         .replace(" ", "_");
 
-        try {
-
-            return TaskStatus.valueOf(
-                    normalizedValue
-            );
-
-        } catch (IllegalArgumentException exception) {
-
-            throw new IllegalArgumentException(
-                    "Invalid status at Excel row "
-                            + (rowIndex + 1)
-                            + ". Allowed values: "
-                            + "TODO, IN_PROGRESS, DONE"
-            );
+        /*
+         * User-friendly Excel value "To Do"
+         * enum value TODO ke saath map hogi.
+         */
+        if (
+                normalizedValue.equals("TO_DO")
+                        || normalizedValue.equals("TODO")
+        ) {
+            return TaskStatus.TODO;
         }
+
+        if (
+                normalizedValue.equals("IN_PROGRESS")
+                        || normalizedValue.equals("INPROGRESS")
+        ) {
+            return TaskStatus.IN_PROGRESS;
+        }
+
+        if (
+                normalizedValue.equals("DONE")
+                        || normalizedValue.equals("COMPLETED")
+                        || normalizedValue.equals("COMPLETE")
+        ) {
+            return TaskStatus.DONE;
+        }
+
+        throw new IllegalArgumentException(
+                "Invalid status at Excel row "
+                        + (rowIndex + 1)
+                        + ": "
+                        + value
+                        + ". Allowed values: "
+                        + "TODO, TO DO, IN_PROGRESS, "
+                        + "IN PROGRESS, DONE"
+        );
     }
 
     private static TaskPriority parsePriority(
