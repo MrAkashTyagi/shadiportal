@@ -101,7 +101,10 @@ public class SecurityConfig {
                 new CorsConfiguration();
 
         configuration.setAllowedOrigins(
-                List.of(frontendUrl)
+                List.of(
+                        "http://localhost:4200",
+                        "http://shadiportal-frontend-2026.s3-website-ap-southeast-2.amazonaws.com"
+                )
         );
 
         configuration.setAllowedMethods(
