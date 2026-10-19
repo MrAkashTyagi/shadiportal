@@ -139,4 +139,42 @@ public interface GiftDistributionRepository
             BigDecimal maxAmount
     );
 
+    @Query("""
+        SELECT COALESCE(
+                SUM(gift.quantity),
+                0
+        )
+        FROM GiftDistribution gift
+        WHERE gift.user.id = :userId
+          AND gift.giftType = :giftType
+        """)
+    Long getTotalQuantityByUserIdAndGiftType(
+            @Param("userId")
+            Integer userId,
+
+            @Param("giftType")
+            GiftType giftType
+    );
+
+    @Query("""
+        SELECT
+            gift.amount,
+            COALESCE(
+                SUM(gift.quantity),
+                0
+            )
+        FROM GiftDistribution gift
+        WHERE gift.user.id = :userId
+          AND gift.giftType = :giftType
+        GROUP BY gift.amount
+        ORDER BY gift.amount ASC
+        """)
+    List<Object[]> getEnvelopeAmountSummary(
+            @Param("userId")
+            Integer userId,
+
+            @Param("giftType")
+            GiftType giftType
+    );
+
 }
