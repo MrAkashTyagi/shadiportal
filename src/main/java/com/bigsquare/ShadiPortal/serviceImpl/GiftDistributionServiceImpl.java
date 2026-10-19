@@ -19,6 +19,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import java.io.ByteArrayOutputStream;
+import java.util.List;
+
 import java.math.BigDecimal;
 
 @Service
@@ -598,5 +606,170 @@ public class GiftDistributionServiceImpl
                         entity.getUpdatedAt()
                 )
                 .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public byte[] export(
+            String search,
+            GiftType giftType,
+            BigDecimal minAmount,
+            BigDecimal maxAmount
+    ) {
+
+        validateAmountRange(
+                minAmount,
+                maxAmount
+        );
+
+        Integer userId =
+                getCurrentUserId();
+
+        List<GiftDistribution> gifts =
+                repository.findForExport(
+                        userId,
+                        normalizeSearch(search),
+                        giftType,
+                        minAmount,
+                        maxAmount
+                );
+
+        try (
+                Workbook workbook =
+                        new XSSFWorkbook();
+
+                ByteArrayOutputStream outputStream =
+                        new ByteArrayOutputStream()
+        ) {
+
+            Sheet sheet =
+                    workbook.createSheet(
+                            "Gift Distribution"
+                    );
+
+            Row header =
+                    sheet.createRow(0);
+
+            header.createCell(0)
+                    .setCellValue(
+                            "Recipient Name"
+                    );
+
+            header.createCell(1)
+                    .setCellValue(
+                            "Mobile Number"
+                    );
+
+            header.createCell(2)
+                    .setCellValue(
+                            "Gift Type"
+                    );
+
+            header.createCell(3)
+                    .setCellValue(
+                            "Amount"
+                    );
+
+            header.createCell(4)
+                    .setCellValue(
+                            "Quantity"
+                    );
+
+            header.createCell(5)
+                    .setCellValue(
+                            "Total Amount"
+                    );
+
+            header.createCell(6)
+                    .setCellValue(
+                            "Notes"
+                    );
+
+            int rowNumber = 1;
+
+            for (
+                    GiftDistribution gift
+                    : gifts
+            ) {
+
+                Row row =
+                        sheet.createRow(
+                                rowNumber++
+                        );
+
+                row.createCell(0)
+                        .setCellValue(
+                                gift.getRecipientName()
+                        );
+
+                row.createCell(1)
+                        .setCellValue(
+                                gift.getMobileNumber() != null
+                                        ? gift.getMobileNumber()
+                                        : ""
+                        );
+
+                row.createCell(2)
+                        .setCellValue(
+                                gift.getGiftType() != null
+                                        ? gift.getGiftType()
+                                        .name()
+                                        : ""
+                        );
+
+                row.createCell(3)
+                        .setCellValue(
+                                gift.getAmount() != null
+                                        ? gift.getAmount()
+                                        .doubleValue()
+                                        : 0.0
+                        );
+
+                row.createCell(4)
+                        .setCellValue(
+                                gift.getQuantity() != null
+                                        ? gift.getQuantity()
+                                        : 0
+                        );
+
+                row.createCell(5)
+                        .setCellValue(
+                                gift.getTotalAmount()
+                                        .doubleValue()
+                        );
+
+                row.createCell(6)
+                        .setCellValue(
+                                gift.getNotes() != null
+                                        ? gift.getNotes()
+                                        : ""
+                        );
+            }
+
+            for (
+                    int columnIndex = 0;
+                    columnIndex <= 6;
+                    columnIndex++
+            ) {
+
+                sheet.autoSizeColumn(
+                        columnIndex
+                );
+            }
+
+            workbook.write(
+                    outputStream
+            );
+
+            return outputStream
+                    .toByteArray();
+
+        } catch (Exception exception) {
+
+            throw new RuntimeException(
+                    "Error while exporting gift distribution",
+                    exception
+            );
+        }
     }
 }
