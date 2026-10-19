@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 public interface GiftDistributionRepository
@@ -93,4 +94,49 @@ public interface GiftDistributionRepository
     long countByUserId(
             Integer userId
     );
+
+    @Query("""
+        SELECT gift
+        FROM GiftDistribution gift
+        WHERE gift.user.id = :userId
+        AND (
+                :search = ''
+                OR LOWER(gift.recipientName)
+                    LIKE LOWER(CONCAT('%', :search, '%'))
+                OR LOWER(COALESCE(gift.mobileNumber, ''))
+                    LIKE LOWER(CONCAT('%', :search, '%'))
+                OR LOWER(COALESCE(gift.notes, ''))
+                    LIKE LOWER(CONCAT('%', :search, '%'))
+        )
+        AND (
+                :giftType IS NULL
+                OR gift.giftType = :giftType
+        )
+        AND (
+                :minAmount IS NULL
+                OR gift.amount >= :minAmount
+        )
+        AND (
+                :maxAmount IS NULL
+                OR gift.amount <= :maxAmount
+        )
+        ORDER BY gift.id DESC
+        """)
+    List<GiftDistribution> findForExport(
+            @Param("userId")
+            Integer userId,
+
+            @Param("search")
+            String search,
+
+            @Param("giftType")
+            GiftType giftType,
+
+            @Param("minAmount")
+            BigDecimal minAmount,
+
+            @Param("maxAmount")
+            BigDecimal maxAmount
+    );
+
 }
