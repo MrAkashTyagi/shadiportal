@@ -1,129 +1,167 @@
-package com.bigsquare.ShadiPortal.controllers;
+import {
+  HttpClient,
+  HttpParams
+} from '@angular/common/http';
 
-import com.bigsquare.ShadiPortal.dto.GiftDistributionRequest;
-import com.bigsquare.ShadiPortal.dto.GiftDistributionResponse;
-import com.bigsquare.ShadiPortal.dto.GiftDistributionSummaryResponse;
-import com.bigsquare.ShadiPortal.enums.GiftType;
-import com.bigsquare.ShadiPortal.services.GiftDistributionService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.http.*;
-import org.springframework.web.bind.annotation.*;
+import {
+  inject,
+  Injectable
+} from '@angular/core';
 
-import java.math.BigDecimal;
+import {
+  Observable
+} from 'rxjs';
+import { environment } from '../../environments/environment';
 
-@RestController
-@RequestMapping("/api/gift-distributions")
-@RequiredArgsConstructor
-public class GiftDistributionController {
+@Injectable({
+  providedIn: 'root'
+})
+export class GiftDistributionService {
 
-    private final GiftDistributionService service;
+  private readonly baseUrl =
+    environment.apiUrl;
 
-    @PostMapping
-    public ResponseEntity<GiftDistributionResponse> create(
-            @RequestBody
-            GiftDistributionRequest request
-    ) {
+  private http =
+    inject(HttpClient);
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(
-                        service.create(request)
-                );
-    }
+  getGiftDistributionsPaged(
+    page: number,
+    size: number,
+    search: string,
+    giftType: string,
+    minAmount: string,
+    maxAmount: string
+  ): Observable<any> {
 
-    @PutMapping("/{id}")
-    public ResponseEntity<GiftDistributionResponse> update(
-            @PathVariable
-            Integer id,
+    const params =
+      new HttpParams()
+        .set(
+          'page',
+          page.toString()
+        )
+        .set(
+          'size',
+          size.toString()
+        )
+        .set(
+          'search',
+          search || ''
+        )
+        .set(
+          'giftType',
+          giftType || ''
+        )
+        .set(
+          'minAmount',
+          minAmount || ''
+        )
+        .set(
+          'maxAmount',
+          maxAmount || ''
+        );
 
-            @RequestBody
-            GiftDistributionRequest request
-    ) {
+    return this.http.get<any>(
+      `${this.baseUrl}/api/gift-distributions`,
+      {
+        params
+      }
+    );
+  }
 
-        return ResponseEntity.ok(
-                service.update(
-                        id,
-                        request
-                )
+  createGiftDistribution(
+    payload: any
+  ): Observable<any> {
+
+    return this.http.post(
+      `${this.baseUrl}/api/gift-distributions`,
+      payload
+    );
+  }
+
+  updateGiftDistribution(
+    id: number,
+    payload: any
+  ): Observable<any> {
+
+    return this.http.put(
+      `${this.baseUrl}/api/gift-distributions/${id}`,
+      payload
+    );
+  }
+
+  deleteGiftDistribution(
+    id: number
+  ): Observable<any> {
+
+    return this.http.delete(
+      `${this.baseUrl}/api/gift-distributions/${id}`
+    );
+  }
+
+  getGiftDistributionById(
+    id: number
+  ): Observable<any> {
+
+    return this.http.get(
+      `${this.baseUrl}/api/gift-distributions/${id}`
+    );
+  }
+
+  getGiftDistributionSummary(): Observable<any> {
+
+    return this.http.get(
+      `${this.baseUrl}/api/gift-distributions/summary`
+    );
+  }
+
+  exportGiftDistributions(
+    search: string,
+    giftType: string,
+    minAmount: string,
+    maxAmount: string
+  ): Observable<Blob> {
+
+    let params =
+      new HttpParams()
+        .set(
+          'search',
+          search.trim()
+        );
+
+    if (giftType) {
+
+      params =
+        params.set(
+          'giftType',
+          giftType
         );
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<GiftDistributionResponse> getById(
-            @PathVariable
-            Integer id
-    ) {
+    if (minAmount) {
 
-        return ResponseEntity.ok(
-                service.getById(id)
+      params =
+        params.set(
+          'minAmount',
+          minAmount
         );
     }
 
-    @GetMapping
-    public ResponseEntity<Page<GiftDistributionResponse>> getAll(
-            @RequestParam(
-                    defaultValue = "0"
-            )
-            int page,
+    if (maxAmount) {
 
-            @RequestParam(
-                    defaultValue = "10"
-            )
-            int size,
-
-            @RequestParam(
-                    defaultValue = ""
-            )
-            String search,
-
-            @RequestParam(
-                    required = false
-            )
-            GiftType giftType,
-
-            @RequestParam(
-                    required = false
-            )
-            BigDecimal minAmount,
-
-            @RequestParam(
-                    required = false
-            )
-            BigDecimal maxAmount
-    ) {
-
-        return ResponseEntity.ok(
-                service.getAll(
-                        page,
-                        size,
-                        search,
-                        giftType,
-                        minAmount,
-                        maxAmount
-                )
+      params =
+        params.set(
+          'maxAmount',
+          maxAmount
         );
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
-            @PathVariable
-            Integer id
-    ) {
+    return this.http.get(
+      `${this.baseUrl}/api/gift-distributions/export`,
+      {
+        params,
+        responseType: 'blob'
+      }
+    );
+  }
 
-        service.delete(id);
-
-        return ResponseEntity
-                .noContent()
-                .build();
-    }
-
-    @GetMapping("/summary")
-    public ResponseEntity<GiftDistributionSummaryResponse>
-    getSummary() {
-
-        return ResponseEntity.ok(
-                service.getSummary()
-        );
-    }
 }
