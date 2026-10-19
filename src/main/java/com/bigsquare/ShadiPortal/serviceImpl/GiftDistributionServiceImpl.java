@@ -24,6 +24,8 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import com.bigsquare.ShadiPortal.dto.GiftEnvelopeSummaryItem;
+
 import java.io.ByteArrayOutputStream;
 import java.util.List;
 
@@ -286,11 +288,67 @@ public class GiftDistributionServiceImpl
                         userId
                 );
 
+        List<Object[]> envelopeSummaryRows =
+                repository
+                        .getEnvelopeAmountSummary(
+                                userId,
+                                GiftType.ENVELOPE
+                        );
+
+        List<GiftEnvelopeSummaryItem> envelopeItems =
+                envelopeSummaryRows
+                        .stream()
+                        .map(row -> {
+
+                            BigDecimal amount =
+                                    row[0] != null
+                                            ? (BigDecimal) row[0]
+                                            : BigDecimal.ZERO;
+
+                            Long count =
+                                    row[1] != null
+                                            ? ((Number) row[1])
+                                            .longValue()
+                                            : 0L;
+
+                            BigDecimal itemTotal =
+                                    amount.multiply(
+                                            BigDecimal.valueOf(
+                                                    count
+                                            )
+                                    );
+
+                            return GiftEnvelopeSummaryItem
+                                    .builder()
+                                    .amount(amount)
+                                    .count(count)
+                                    .totalAmount(itemTotal)
+                                    .build();
+                        })
+                        .toList();
+
+        Long totalEnvelopes =
+                envelopeItems
+                        .stream()
+                        .mapToLong(
+                                GiftEnvelopeSummaryItem::getCount
+                        )
+                        .sum();
+
+        BigDecimal envelopeGrandTotal =
+                envelopeItems
+                        .stream()
+                        .map(
+                                GiftEnvelopeSummaryItem::getTotalAmount
+                        )
+                        .reduce(
+                                BigDecimal.ZERO,
+                                BigDecimal::add
+                        );
+
         return GiftDistributionSummaryResponse
                 .builder()
-                .totalRecords(
-                        totalRecords
-                )
+                .totalRecords(totalRecords)
                 .totalQuantity(
                         totalQuantity != null
                                 ? totalQuantity
@@ -301,6 +359,9 @@ public class GiftDistributionServiceImpl
                                 ? totalAmount
                                 : BigDecimal.ZERO
                 )
+                .envelopeItems(envelopeItems)
+                .totalEnvelopes(totalEnvelopes)
+                .envelopeGrandTotal(envelopeGrandTotal)
                 .build();
     }
 
