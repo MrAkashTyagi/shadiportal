@@ -37,4 +37,12 @@ public interface GiftDistributionService {
     );
 
     GiftDistributionSummaryResponse getSummary();
+
+    byte[] export(
+            String search,
+            GiftType giftType,
+            BigDecimal minAmount,
+            BigDecimal maxAmount
+    );
+
 }
